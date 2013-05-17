@@ -26,8 +26,8 @@ Designed to be lightning-fast and highly concurrent, with modest CPU and memory 
 
 ### Options
 
-    -m (--max-connections) N : Maximum number of connections to S3
-    -n (--dry-run)           : Do not actually do anything, but show what would be done
+    -m (--max-connections) N : Maximum number of connections to S3 (default 100)
+    -n (--dry-run)           : Do not actually do anything, but show what would be done (default false)
     -t (--max-threads) N     : Maximum number of threads (default is same as --max-connections)
-    -v (--verbose)           : Verbose output
+    -v (--verbose)           : Verbose output (default false)
 
