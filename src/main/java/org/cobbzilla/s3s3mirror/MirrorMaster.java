@@ -17,7 +17,6 @@ public class MirrorMaster {
     public MirrorMaster(AmazonS3Client client, MirrorOptions options) {
         this.client = client;
         this.options = options;
-
     }
 
     public void mirror() {
@@ -34,7 +33,7 @@ public class MirrorMaster {
         };
 
         final ExecutorService executorService = new ThreadPoolExecutor(options.getMaxThreads(), options.getMaxThreads(), 1, TimeUnit.MINUTES, workQueue, rejectedExecutionHandler);
-        final KeyLister lister = new KeyLister(client, options, workQueue, maxQueueCapacity);
+        final KeyLister lister = new KeyLister(client, options, maxQueueCapacity);
         executorService.submit(lister);
 
         List<S3ObjectSummary> summaries = lister.getNextBatch();

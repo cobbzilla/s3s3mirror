@@ -8,16 +8,13 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @Slf4j
 public class KeyLister implements Runnable {
 
-    private final int fetchSize;
     private AmazonS3Client client;
     private MirrorOptions options;
-    private BlockingQueue<Runnable> workQueue;
     private int maxQueueCapacity;
 
     private final List<S3ObjectSummary> summaries;
@@ -26,13 +23,13 @@ public class KeyLister implements Runnable {
 
     public boolean isDone () { return done.get(); }
 
-    public KeyLister(AmazonS3Client client, MirrorOptions options, BlockingQueue<Runnable> workQueue, int maxQueueCapacity) {
+    public KeyLister(AmazonS3Client client, MirrorOptions options, int maxQueueCapacity) {
         this.client = client;
         this.options = options;
-        this.workQueue = workQueue;
         this.maxQueueCapacity = maxQueueCapacity;
-        this.fetchSize = options.getMaxThreads();
-        this.summaries = new ArrayList<>(10*fetchSize);
+
+        int fetchSize = options.getMaxThreads();
+        this.summaries = new ArrayList<>(10* fetchSize);
 
         final ListObjectsRequest request = new ListObjectsRequest(options.getSourceBucket(), null, null, null, fetchSize);
         listing = client.listObjects(request);
