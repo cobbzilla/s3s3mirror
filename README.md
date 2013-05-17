@@ -12,6 +12,15 @@ An object will be copied if and only if one of the following holds true:
 
 When copying, the source metadata and ACL lists are also copied to the destination object.
 
+### Motivation
+
+I started with "s3cmd sync" but found that with buckets containing many thousands of objects, it was incredibly slow
+to start and consumed *massive* amounts of memory. So I designed s3s3mirror to start copying immediately with an intelligently
+chosen "chunk size" and to operate in a highly-threaded, streaming fashion, so memory requirements are much lower.
+
+Running with 100 threads, I found the gating factor to be *how fast I could list items from the source bucket* (!?!)
+Which makes me wonder if there is any way to do this faster. I'm sure there must be, but this is pretty damn fast.
+
 ### AWS Credentials
 
 * s3s3mirror will first look for credentials in your system environment. If variables named AWS\_ACCESS\_KEY\_ID and AWS\_SECRET\_ACCESS\_KEY are defined, then these will be used.
