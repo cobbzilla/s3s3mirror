@@ -40,8 +40,7 @@ public class MirrorMaster {
         if (verbose) log.info(summaries.size()+" keys found in first batch from source bucket -- processing...");
 
         int counter = 0;
-        boolean done = false;
-        while (!done) {
+        while (true) {
             for (S3ObjectSummary summary : summaries) {
                 while (workQueue.size() >= maxQueueCapacity) {
                     try {
@@ -65,7 +64,7 @@ public class MirrorMaster {
 
             } else if (lister.isDone()) {
                 if (verbose) log.info("No more keys found in source bucket -- ALL DONE");
-                done = true;
+                return;
 
             } else {
                 if (verbose) log.info("Lister has no keys queued, but is not done, waiting and retrying");
