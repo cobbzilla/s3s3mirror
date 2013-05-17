@@ -4,6 +4,7 @@ import com.amazonaws.ClientConfiguration;
 import com.amazonaws.Protocol;
 import com.amazonaws.services.s3.AmazonS3Client;
 import lombok.AllArgsConstructor;
+import lombok.Cleanup;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -46,14 +47,13 @@ public class MirrorMain {
         parser.parseArgument(args);
         if (!options.hasAwsKeys()) {
             // try to load from ~/.s3cfg
-            try (BufferedReader reader = new BufferedReader(new FileReader(System.getProperty("user.home")+File.separator+".s3cfg"))) {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    if (line.trim().startsWith("access_key")) {
-                        options.setAWSAccessKeyId(line.substring(line.indexOf("=") + 1).trim());
-                    } else if (line.trim().startsWith("secret_key")) {
-                        options.setAWSSecretKey(line.substring(line.indexOf("=") + 1).trim());
-                    }
+            @Cleanup BufferedReader reader = new BufferedReader(new FileReader(System.getProperty("user.home")+File.separator+".s3cfg"));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (line.trim().startsWith("access_key")) {
+                    options.setAWSAccessKeyId(line.substring(line.indexOf("=") + 1).trim());
+                } else if (line.trim().startsWith("secret_key")) {
+                    options.setAWSSecretKey(line.substring(line.indexOf("=") + 1).trim());
                 }
             }
         }

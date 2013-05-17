@@ -29,7 +29,7 @@ Which makes me wonder if there is any way to do this faster. I'm sure there must
 
 ### System Requirements
 
-* Java 7
+* Java 6
 * Maven 3
 
 ### Building

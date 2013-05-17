@@ -29,7 +29,7 @@ public class KeyLister implements Runnable {
         this.maxQueueCapacity = maxQueueCapacity;
 
         int fetchSize = options.getMaxThreads();
-        this.summaries = new ArrayList<>(10* fetchSize);
+        this.summaries = new ArrayList<S3ObjectSummary>(10* fetchSize);
 
         final ListObjectsRequest request = new ListObjectsRequest(options.getSourceBucket(), null, null, null, fetchSize);
         listing = client.listObjects(request);
@@ -81,7 +81,7 @@ public class KeyLister implements Runnable {
     public List<S3ObjectSummary> getNextBatch() {
         List<S3ObjectSummary> copy;
         synchronized (summaries) {
-            copy = new ArrayList<>(summaries);
+            copy = new ArrayList<S3ObjectSummary>(summaries);
             summaries.clear();
         }
         return copy;

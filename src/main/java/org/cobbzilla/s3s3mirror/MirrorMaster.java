@@ -24,7 +24,7 @@ public class MirrorMaster {
         final boolean verbose = options.isVerbose();
 
         final int maxQueueCapacity = 10 * options.getMaxThreads();
-        final BlockingQueue<Runnable> workQueue = new LinkedBlockingQueue<>(maxQueueCapacity);
+        final BlockingQueue<Runnable> workQueue = new LinkedBlockingQueue<Runnable>(maxQueueCapacity);
         final RejectedExecutionHandler rejectedExecutionHandler = new RejectedExecutionHandler() {
             @Override
             public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
