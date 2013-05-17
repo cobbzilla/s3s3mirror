@@ -5,6 +5,13 @@ A utility for mirroring content from one S3 bucket to another.
 
 Designed to be lightning-fast and highly concurrent, with modest CPU and memory requirements.
 
+An object will be copied if and only if one of the following holds true:
+
+* The object does not exist in the destination bucket.
+* The size or ETag of the object in the destination bucket are different from the size/ETag in the source bucket.
+
+When copying, the source metadata and ACL lists are also copied to the destination object.
+
 ### AWS Credentials
 
 * s3s3mirror will first look for credentials in your system environment. If variables named AWS\_ACCESS\_KEY\_ID and AWS\_SECRET\_ACCESS\_KEY are defined, then these will be used.
