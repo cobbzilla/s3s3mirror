@@ -40,42 +40,55 @@ public class MirrorMaster {
         if (verbose) log.info(summaries.size()+" keys found in first batch from source bucket -- processing...");
 
         int counter = 0;
-        while (true) {
-            for (S3ObjectSummary summary : summaries) {
-                while (workQueue.size() >= maxQueueCapacity) {
-                    try {
-                        synchronized (notifyLock) {
-                            notifyLock.wait(100);
+        try {
+            while (true) {
+                for (S3ObjectSummary summary : summaries) {
+                    while (workQueue.size() >= maxQueueCapacity) {
+                        try {
+                            synchronized (notifyLock) {
+                                notifyLock.wait(100);
+                            }
+                            Thread.sleep(50);
+
+                        } catch (InterruptedException e) {
+                            log.error("interrupted!");
+                            return;
                         }
-                        Thread.sleep(50);
-
-                    } catch (InterruptedException e) {
-                        log.error("interrupted!");
-                        return;
                     }
+                    executorService.submit(new KeyJob(client, options, summary, notifyLock));
+                    counter++;
                 }
-                executorService.submit(new KeyJob(client, options, summary, notifyLock));
-                counter++;
-            }
 
-            summaries = lister.getNextBatch();
-            if (summaries.size() > 0) {
-                if (verbose) log.info(summaries.size()+" more keys found in source bucket -- continuing (queue size="+workQueue.size()+", total processed="+counter+")...");
+                summaries = lister.getNextBatch();
+                if (summaries.size() > 0) {
+                    if (verbose) log.info(summaries.size()+" more keys found in source bucket -- continuing (queue size="+workQueue.size()+", total processed="+counter+")...");
 
-            } else if (lister.isDone()) {
-                if (verbose) log.info("No more keys found in source bucket -- ALL DONE");
-                return;
-
-            } else {
-                if (verbose) log.info("Lister has no keys queued, but is not done, waiting and retrying");
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException e) {
-                    log.error("interrupted!");
+                } else if (lister.isDone()) {
+                    if (verbose) log.info("No more keys found in source bucket -- ALL DONE");
                     return;
+
+                } else {
+                    if (verbose) log.info("Lister has no keys queued, but is not done, waiting and retrying");
+                    if (sleep(100)) return;
                 }
             }
+        } finally {
+            while (workQueue.size() > 0) {
+                // wait for the queue to be empty
+                if (sleep(100)) return;
+            }
+            // this will wait for currently executing tasks to finish
+            executorService.shutdown();
         }
+    }
 
+    private boolean sleep(int millis) {
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException e) {
+            log.error("interrupted!");
+            return true;
+        }
+        return false;
     }
 }
