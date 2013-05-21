@@ -5,7 +5,7 @@ A utility for mirroring content from one S3 bucket to another.
 
 Designed to be lightning-fast and highly concurrent, with modest CPU and memory requirements.
 
-An object will be copied if and only if one of the following holds true:
+An object will be copied if and only if at least one of the following holds true:
 
 * The object does not exist in the destination bucket.
 * The size or ETag of the object in the destination bucket are different from the size/ETag in the source bucket.
