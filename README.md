@@ -42,8 +42,10 @@ Which makes me wonder if there is any way to do this faster. I'm sure there must
 
 ### Options
 
+    -c (--ctime) N           : Only copy objects whose Last-Modified date is younger than this many days
     -m (--max-connections) N : Maximum number of connections to S3 (default 100)
     -n (--dry-run)           : Do not actually do anything, but show what would be done (default false)
+    -p (--prefix) VAL        : Only copy objects whose keys start with this prefix
     -t (--max-threads) N     : Maximum number of threads (default is same as --max-connections)
     -v (--verbose)           : Verbose output (default false)
 

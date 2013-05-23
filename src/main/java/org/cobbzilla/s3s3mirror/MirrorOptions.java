@@ -6,6 +6,8 @@ import lombok.Setter;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 
+import java.util.concurrent.TimeUnit;
+
 public class MirrorOptions implements AWSCredentials {
 
     public static final String S3_PROTOCOL_PREFIX = "s3://";
@@ -29,6 +31,12 @@ public class MirrorOptions implements AWSCredentials {
     @Option(name=OPT_VERBOSE, aliases=LONGOPT_VERBOSE, usage=USAGE_VERBOSE)
     @Getter @Setter private boolean verbose = false;
 
+    public static final String USAGE_PREFIX = "Only copy objects whose keys start with this prefix";
+    public static final String OPT_PREFIX = "-p";
+    public static final String LONGOPT_PREFIX = "--prefix";
+    @Option(name=OPT_PREFIX, aliases=LONGOPT_PREFIX, usage=USAGE_PREFIX)
+    @Getter @Setter private String prefix = null;
+
     public static final String USAGE_MAX_CONNECTIONS = "Maximum number of connections to S3";
     public static final String OPT_MAX_CONNECTIONS = "-m";
     public static final String LONGOPT_MAX_CONNECTIONS = "--max-connections";
@@ -40,6 +48,16 @@ public class MirrorOptions implements AWSCredentials {
     public static final String LONGOPT_MAX_THREADS = "--max-threads";
     @Option(name=OPT_MAX_THREADS, aliases=LONGOPT_MAX_THREADS, usage=USAGE_MAX_THREADS)
     @Getter @Setter private int maxThreads = maxConnections;
+
+    public static final String USAGE_CTIME = "Only copy objects whose Last-Modified date is younger than this many days";
+    public static final String OPT_CTIME = "-c";
+    public static final String LONGOPT_CTIME = "--ctime";
+    @Option(name=OPT_CTIME, aliases=LONGOPT_CTIME, usage=USAGE_CTIME)
+    @Getter @Setter private Long ctime = null;
+    public boolean hasCtime() { return ctime != null; }
+    public long getCtimeMillis() { return TimeUnit.DAYS.toMillis(ctime); }
+
+    @Getter private long nowTime = System.currentTimeMillis();
 
     @Argument(index=0, required=true, usage="source bucket") @Getter @Setter private String source;
     @Argument(index=1, required=true, usage="destination bucket") @Getter @Setter private String destination;

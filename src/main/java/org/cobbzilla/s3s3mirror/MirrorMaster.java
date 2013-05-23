@@ -11,16 +11,17 @@ import java.util.concurrent.*;
 public class MirrorMaster {
 
     private final AmazonS3Client client;
-    private final MirrorOptions options;
+    private final MirrorContext context;
     private final Object notifyLock = new Object();
 
-    public MirrorMaster(AmazonS3Client client, MirrorOptions options) {
+    public MirrorMaster(AmazonS3Client client, MirrorContext context) {
         this.client = client;
-        this.options = options;
+        this.context = context;
     }
 
     public void mirror() {
 
+        final MirrorOptions options = context.getOptions();
         final boolean verbose = options.isVerbose();
 
         final int maxQueueCapacity = 10 * options.getMaxThreads();
@@ -33,7 +34,7 @@ public class MirrorMaster {
         };
 
         final ExecutorService executorService = new ThreadPoolExecutor(options.getMaxThreads(), options.getMaxThreads(), 1, TimeUnit.MINUTES, workQueue, rejectedExecutionHandler);
-        final KeyLister lister = new KeyLister(client, options, maxQueueCapacity);
+        final KeyLister lister = new KeyLister(client, context, maxQueueCapacity);
         executorService.submit(lister);
 
         List<S3ObjectSummary> summaries = lister.getNextBatch();
@@ -55,7 +56,7 @@ public class MirrorMaster {
                             return;
                         }
                     }
-                    executorService.submit(new KeyJob(client, options, summary, notifyLock));
+                    executorService.submit(new KeyJob(client, context, summary, notifyLock));
                     counter++;
                 }
 

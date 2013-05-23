@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class KeyLister implements Runnable {
 
     private AmazonS3Client client;
-    private MirrorOptions options;
+    private MirrorContext context;
     private int maxQueueCapacity;
 
     private final List<S3ObjectSummary> summaries;
@@ -23,15 +23,16 @@ public class KeyLister implements Runnable {
 
     public boolean isDone () { return done.get(); }
 
-    public KeyLister(AmazonS3Client client, MirrorOptions options, int maxQueueCapacity) {
+    public KeyLister(AmazonS3Client client, MirrorContext context, int maxQueueCapacity) {
         this.client = client;
-        this.options = options;
+        this.context = context;
         this.maxQueueCapacity = maxQueueCapacity;
 
+        final MirrorOptions options = context.getOptions();
         int fetchSize = options.getMaxThreads();
-        this.summaries = new ArrayList<S3ObjectSummary>(10* fetchSize);
+        this.summaries = new ArrayList<S3ObjectSummary>(10*fetchSize);
 
-        final ListObjectsRequest request = new ListObjectsRequest(options.getSourceBucket(), null, null, null, fetchSize);
+        final ListObjectsRequest request = new ListObjectsRequest(options.getSourceBucket(), options.getPrefix(), null, null, fetchSize);
         listing = client.listObjects(request);
         synchronized (summaries) {
             final List<S3ObjectSummary> objectSummaries = listing.getObjectSummaries();
@@ -42,14 +43,18 @@ public class KeyLister implements Runnable {
 
     @Override
     public void run() {
+        final MirrorOptions options = context.getOptions();
+        int counter = 0;
         try {
             while (true) {
                 while (getSize() < maxQueueCapacity/2) {
                     if (listing.isTruncated()) {
                         listing = client.listNextBatchOfObjects(listing);
+                        if (options.isVerbose() && counter++ % 100 == 0) context.getStats().logStats();
                         synchronized (summaries) {
                             final List<S3ObjectSummary> objectSummaries = listing.getObjectSummaries();
                             summaries.addAll(objectSummaries);
+                            context.getStats().objectsRead += objectSummaries.size();
                             if (options.isVerbose()) log.info("queued next set of "+objectSummaries.size()+" keys (total now="+getSize()+")");
                         }
 
