@@ -87,7 +87,7 @@
 
     <build>
         <plugins>
-            <!-- Force Java 1.7 at all times -->
+            <!-- Force Java 1.6 at all times -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
