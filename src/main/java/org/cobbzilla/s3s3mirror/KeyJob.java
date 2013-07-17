@@ -9,6 +9,9 @@ import java.util.Date;
 @Slf4j
 public class KeyJob implements Runnable {
 
+    // todo: make this configurable
+    public static final int MAX_TRIES = 5;
+
     private final AmazonS3Client client;
     private final MirrorContext context;
     private final S3ObjectSummary summary;
@@ -29,9 +32,7 @@ public class KeyJob implements Runnable {
         final boolean verbose = options.isVerbose();
         final String key = summary.getKey();
         try {
-            if (!shouldTransfer()) {
-                return;
-            }
+            if (!shouldTransfer()) return;
 
             final CopyObjectRequest request = new CopyObjectRequest(options.getSourceBucket(), key, options.getDestinationBucket(), key);
 
@@ -44,12 +45,31 @@ public class KeyJob implements Runnable {
             if (options.isDryRun()) {
                 log.info("Would have copied "+ key +" to destination");
             } else {
-                log.info("copying: "+key);
-                try {
-                    client.copyObject(request);
+                boolean copiedOK = false;
+                for (int tries=0; tries<MAX_TRIES; tries++) {
+                    log.info("copying (try #"+tries+"): "+key);
+                    try {
+                        client.copyObject(request);
+                        copiedOK = true;
+                        if (verbose) log.info("successfully copied (on try #"+tries+"): "+key);
+                        break;
+
+                    } catch (AmazonS3Exception s3e) {
+                        log.error("s3 exception copying (try #"+tries+") "+key+": "+s3e);
+
+                    } catch (Exception e) {
+                        log.error("unexpected exception copying (try #"+tries+") "+key+": "+e);
+                    }
+                    try {
+                        Thread.sleep(10);
+                    } catch (InterruptedException e) {
+                        log.error("interrupted while waiting to retry key: "+key);
+                        break;
+                    }
+                }
+                if (copiedOK) {
                     context.getStats().objectsCopied++;
-                } catch (Exception e) {
-                    log.error("error copying "+key+": "+e);
+                } else {
                     context.getStats().copyErrors++;
                 }
             }
