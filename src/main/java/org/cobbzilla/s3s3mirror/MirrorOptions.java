@@ -49,6 +49,12 @@ public class MirrorOptions implements AWSCredentials {
     @Option(name=OPT_MAX_THREADS, aliases=LONGOPT_MAX_THREADS, usage=USAGE_MAX_THREADS)
     @Getter @Setter private int maxThreads = maxConnections;
 
+    public static final String USAGE_MAX_RETRIES = "Maximum number of retries for S3 requests (default is 5)";
+    public static final String OPT_MAX_RETRIES = "-r";
+    public static final String LONGOPT_MAX_RETRIES = "--max-retries";
+    @Option(name=OPT_MAX_RETRIES, aliases=LONGOPT_MAX_RETRIES, usage=USAGE_MAX_RETRIES)
+    @Getter @Setter private int maxRetries = 5;
+
     public static final String USAGE_CTIME = "Only copy objects whose Last-Modified date is younger than this many days";
     public static final String OPT_CTIME = "-c";
     public static final String LONGOPT_CTIME = "--ctime";

@@ -1,6 +1,7 @@
 package org.cobbzilla.s3s3mirror;
 
 import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.amazonaws.services.s3.model.ListObjectsRequest;
 import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
@@ -44,18 +45,19 @@ public class KeyLister implements Runnable {
     @Override
     public void run() {
         final MirrorOptions options = context.getOptions();
+        final boolean verbose = options.isVerbose();
         int counter = 0;
         try {
             while (true) {
-                while (getSize() < maxQueueCapacity/2) {
+                while (getSize() < maxQueueCapacity) {
                     if (listing.isTruncated()) {
-                        listing = client.listNextBatchOfObjects(listing);
-                        if (options.isVerbose() && counter++ % 100 == 0) context.getStats().logStats();
+                        listing = s3getNextBatch();
+                        if (verbose && counter++ % 100 == 0) context.getStats().logStats();
                         synchronized (summaries) {
                             final List<S3ObjectSummary> objectSummaries = listing.getObjectSummaries();
                             summaries.addAll(objectSummaries);
                             context.getStats().objectsRead += objectSummaries.size();
-                            if (options.isVerbose()) log.info("queued next set of "+objectSummaries.size()+" keys (total now="+getSize()+")");
+                            if (verbose) log.info("queued next set of "+objectSummaries.size()+" keys (total now="+getSize()+")");
                         }
 
                     } else {
@@ -70,17 +72,46 @@ public class KeyLister implements Runnable {
                     return;
                 }
             }
+        } catch (Exception e) {
+            log.error("Error in run loop, KeyLister thread now exiting: "+e);
+
         } finally {
+            if (verbose) log.info("KeyLister run loop finished");
             done.set(true);
         }
     }
 
-    private int getSize() {
-        int size;
-        synchronized (summaries) {
-            size = summaries.size();
+    private ObjectListing s3getNextBatch() {
+        final MirrorOptions options = context.getOptions();
+        final boolean verbose = options.isVerbose();
+        final int maxRetries = options.getMaxRetries();
+
+        for (int tries=0; tries<maxRetries; tries++) {
+            try {
+                ObjectListing next = client.listNextBatchOfObjects(listing);
+                if (verbose) log.info("successfully got next batch of objects (on try #"+tries+")");
+                return next;
+
+            } catch (AmazonS3Exception s3e) {
+                log.error("s3 exception listing objects (try #"+tries+"): "+s3e);
+
+            } catch (Exception e) {
+                log.error("unexpected exception listing objects (try #"+tries+"): "+e);
+            }
+            try {
+                Thread.sleep(10);
+            } catch (InterruptedException e) {
+                log.error("interrupted while waiting to retry listing objects");
+                break;
+            }
         }
-        return size;
+        throw new IllegalStateException("Too many errors trying to list objects (maxRetries="+maxRetries+")");
+    }
+
+    private int getSize() {
+        synchronized (summaries) {
+            return summaries.size();
+        }
     }
 
     public List<S3ObjectSummary> getNextBatch() {

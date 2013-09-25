@@ -9,9 +9,6 @@ import java.util.Date;
 @Slf4j
 public class KeyJob implements Runnable {
 
-    // todo: make this configurable
-    public static final int MAX_TRIES = 5;
-
     private final AmazonS3Client client;
     private final MirrorContext context;
     private final S3ObjectSummary summary;
@@ -30,6 +27,7 @@ public class KeyJob implements Runnable {
     public void run() {
         final MirrorOptions options = context.getOptions();
         final boolean verbose = options.isVerbose();
+        final int maxRetries = options.getMaxRetries();
         final String key = summary.getKey();
         try {
             if (!shouldTransfer()) return;
@@ -46,7 +44,7 @@ public class KeyJob implements Runnable {
                 log.info("Would have copied "+ key +" to destination");
             } else {
                 boolean copiedOK = false;
-                for (int tries=0; tries<MAX_TRIES; tries++) {
+                for (int tries=0; tries<maxRetries; tries++) {
                     log.info("copying (try #"+tries+"): "+key);
                     try {
                         client.copyObject(request);
