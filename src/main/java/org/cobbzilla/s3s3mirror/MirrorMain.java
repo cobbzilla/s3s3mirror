@@ -40,7 +40,7 @@ public class MirrorMain {
         final AmazonS3Client client = new AmazonS3Client(options, new ClientConfiguration().withProtocol(Protocol.HTTP).withMaxConnections(options.getMaxConnections()));
         final MirrorContext context = new MirrorContext(options);
         final MirrorMaster master = new MirrorMaster(client, context);
-        log.info("Adding shutdown hook");
+        log.debug("Adding shutdown hook");
         Runtime.getRuntime().addShutdownHook(context.getStats().getShutdownHook());
         master.mirror();
     }

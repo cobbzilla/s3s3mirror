@@ -50,7 +50,7 @@ public class KeyJob implements Runnable {
             } else {
                 boolean copiedOK = false;
                 for (int tries=0; tries<maxRetries; tries++) {
-                    log.info("copying (try #"+tries+"): "+key+" to: "+keydest);
+                    if (verbose) log.info("copying (try #"+tries+"): "+key+" to: "+keydest);
                     try {
                         client.copyObject(request);
                         copiedOK = true;
@@ -100,14 +100,11 @@ public class KeyJob implements Runnable {
         if (options.hasCtime()) {
             final Date lastModified = summary.getLastModified();
             if (lastModified == null) {
-                if (verbose) {
-                    log.info("No Last-Modified header for key: " + key);
-                }
+                if (verbose) log.info("No Last-Modified header for key: " + key);
+
             } else {
                 if (options.getNowTime() - lastModified.getTime() > options.getCtimeMillis()) {
-                    if (verbose) {
-                        log.info("key is older than "+options.getCtime()+" days (not copying)");
-                    }
+                    if (verbose) log.info("key is older than "+options.getCtime()+" days (not copying)");
                     return false;
                 }
             }
@@ -123,20 +120,19 @@ public class KeyJob implements Runnable {
                 if (verbose) log.info("Key not found in destination bucket (will copy): "+ keydest);
                 return true;
             } else {
-                log.info("Error getting metadata for "+options.getDestinationBucket()+"/"+ keydest +" (not copying): "+e);
+                log.warn("Error getting metadata for "+options.getDestinationBucket()+"/"+ keydest +" (not copying): "+e);
                 return false;
             }
         } catch (Exception e) {
-            log.info("Error getting metadata for "+options.getDestinationBucket()+"/"+ keydest +" (not copying): "+e);
+            log.warn("Error getting metadata for "+options.getDestinationBucket()+"/"+ keydest +" (not copying): "+e);
             return false;
         }
 
         final KeyFingerprint destFingerprint = new KeyFingerprint(metadata.getContentLength(), metadata.getETag());
 
         final boolean objectChanged = !sourceFingerprint.equals(destFingerprint);
-        if (verbose) {
-            if (!objectChanged) log.info("Destination file is same as source, not copying: "+ key);
-        }
+        if (verbose && !objectChanged) log.info("Destination file is same as source, not copying: "+ key);
+
         return objectChanged;
     }
 
