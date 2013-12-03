@@ -38,6 +38,7 @@ public class KeyLister implements Runnable {
         synchronized (summaries) {
             final List<S3ObjectSummary> objectSummaries = listing.getObjectSummaries();
             summaries.addAll(objectSummaries);
+            context.getStats().objectsRead += objectSummaries.size();
             if (options.isVerbose()) log.info("added initial set of "+objectSummaries.size()+" keys");
         }
     }
