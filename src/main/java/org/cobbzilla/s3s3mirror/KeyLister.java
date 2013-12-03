@@ -48,12 +48,13 @@ public class KeyLister implements Runnable {
         final MirrorOptions options = context.getOptions();
         final boolean verbose = options.isVerbose();
         int counter = 0;
+        log.info("starting...");
         try {
             while (true) {
                 while (getSize() < maxQueueCapacity) {
                     if (listing.isTruncated()) {
                         listing = s3getNextBatch();
-                        if (verbose && counter++ % 100 == 0) context.getStats().logStats();
+                        if (++counter % 100 == 0) context.getStats().logStats();
                         synchronized (summaries) {
                             final List<S3ObjectSummary> objectSummaries = listing.getObjectSummaries();
                             summaries.addAll(objectSummaries);
