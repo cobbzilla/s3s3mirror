@@ -32,7 +32,12 @@ public class KeyJob implements Runnable {
         try {
             if (!shouldTransfer()) return;
 
-            final CopyObjectRequest request = new CopyObjectRequest(options.getSourceBucket(), key, options.getDestinationBucket(), key);
+            String keydest = key;
+            if (!options.getAddPrefix().equals("")) {
+                keydest = key.substring(options.getPrefix().length());
+                keydest = options.getAddPrefix() + keydest;
+            }
+            final CopyObjectRequest request = new CopyObjectRequest(options.getSourceBucket(), key, options.getDestinationBucket(), keydest);
 
             final ObjectMetadata sourceMetadata = client.getObjectMetadata(options.getSourceBucket(), key);
             request.setNewObjectMetadata(sourceMetadata);
@@ -41,22 +46,22 @@ public class KeyJob implements Runnable {
             request.setAccessControlList(objectAcl);
 
             if (options.isDryRun()) {
-                log.info("Would have copied "+ key +" to destination");
+                log.info("Would have copied "+ key +" to destination: "+keydest);
             } else {
                 boolean copiedOK = false;
                 for (int tries=0; tries<maxRetries; tries++) {
-                    log.info("copying (try #"+tries+"): "+key);
+                    log.info("copying (try #"+tries+"): "+key+" to: "+keydest);
                     try {
                         client.copyObject(request);
                         copiedOK = true;
-                        if (verbose) log.info("successfully copied (on try #"+tries+"): "+key);
+                        if (verbose) log.info("successfully copied (on try #"+tries+"): "+key+" to: "+keydest);
                         break;
 
                     } catch (AmazonS3Exception s3e) {
-                        log.error("s3 exception copying (try #"+tries+") "+key+": "+s3e);
+                        log.error("s3 exception copying (try #"+tries+") "+key+" to: "+keydest+": "+s3e);
 
                     } catch (Exception e) {
-                        log.error("unexpected exception copying (try #"+tries+") "+key+": "+e);
+                        log.error("unexpected exception copying (try #"+tries+") "+key+" to: "+keydest+": "+e);
                     }
                     try {
                         Thread.sleep(10);
@@ -86,6 +91,11 @@ public class KeyJob implements Runnable {
 
         final String key = summary.getKey();
         final boolean verbose = options.isVerbose();
+        String keydest = key;
+        if (!options.getAddPrefix().equals("")) {
+            keydest = key.substring(options.getPrefix().length());
+            keydest = options.getAddPrefix() + keydest;
+        }
 
         if (options.hasCtime()) {
             final Date lastModified = summary.getLastModified();
@@ -107,17 +117,17 @@ public class KeyJob implements Runnable {
 
         final ObjectMetadata metadata;
         try {
-            metadata = client.getObjectMetadata(options.getDestinationBucket(), key);
+            metadata = client.getObjectMetadata(options.getDestinationBucket(), keydest);
         } catch (AmazonS3Exception e) {
             if (e.getStatusCode() == 404) {
-                if (verbose) log.info("Key not found in destination bucket (will copy): "+ key);
+                if (verbose) log.info("Key not found in destination bucket (will copy): "+ keydest);
                 return true;
             } else {
-                log.info("Error getting metadata for "+options.getDestinationBucket()+"/"+ key +" (not copying): "+e);
+                log.info("Error getting metadata for "+options.getDestinationBucket()+"/"+ keydest +" (not copying): "+e);
                 return false;
             }
         } catch (Exception e) {
-            log.info("Error getting metadata for "+options.getDestinationBucket()+"/"+ key +" (not copying): "+e);
+            log.info("Error getting metadata for "+options.getDestinationBucket()+"/"+ keydest +" (not copying): "+e);
             return false;
         }
 
