@@ -47,6 +47,7 @@ Which makes me wonder if there is any way to do this faster. I'm sure there must
     -n (--dry-run)           : Do not actually do anything, but show what would be done (default false)
     -r (--max-retries) N     : Maximum number of retries for S3 requests (default is 5)
     -p (--prefix) VAL        : Only copy objects whose keys start with this prefix
+    -a (--addprefix) VAL     : Give the copied object this prefix (replacing the one specified in --prefix, if any)
     -t (--max-threads) N     : Maximum number of threads (default is same as --max-connections)
     -v (--verbose)           : Verbose output (default false)
 

@@ -33,7 +33,7 @@ public class KeyJob implements Runnable {
             if (!shouldTransfer()) return;
 
             String keydest = key;
-            if (!options.getAddPrefix().equals("")) {
+            if (options.hasAddPrefix()) {
                 keydest = key.substring(options.getPrefix().length());
                 keydest = options.getAddPrefix() + keydest;
             }
