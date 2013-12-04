@@ -45,19 +45,19 @@ public class MirrorOptions implements AWSCredentials {
 
     public boolean hasDestPrefix() { return destPrefix != null && destPrefix.trim().length() > 0; }
 
-    public static final String USAGE_MAX_CONNECTIONS = "Maximum number of connections to S3";
+    public static final String USAGE_MAX_CONNECTIONS = "Maximum number of connections to S3 (default 100)";
     public static final String OPT_MAX_CONNECTIONS = "-m";
     public static final String LONGOPT_MAX_CONNECTIONS = "--max-connections";
     @Option(name=OPT_MAX_CONNECTIONS, aliases=LONGOPT_MAX_CONNECTIONS, usage=USAGE_MAX_CONNECTIONS)
     @Getter @Setter private int maxConnections = 100;
 
-    public static final String USAGE_MAX_THREADS = "Maximum number of threads (default is same as --max-connections)";
+    public static final String USAGE_MAX_THREADS = "Maximum number of threads (default 100)";
     public static final String OPT_MAX_THREADS = "-t";
     public static final String LONGOPT_MAX_THREADS = "--max-threads";
     @Option(name=OPT_MAX_THREADS, aliases=LONGOPT_MAX_THREADS, usage=USAGE_MAX_THREADS)
-    @Getter @Setter private int maxThreads = maxConnections;
+    @Getter @Setter private int maxThreads = 100;
 
-    public static final String USAGE_MAX_RETRIES = "Maximum number of retries for S3 requests (default is 5)";
+    public static final String USAGE_MAX_RETRIES = "Maximum number of retries for S3 requests (default 5)";
     public static final String OPT_MAX_RETRIES = "-r";
     public static final String LONGOPT_MAX_RETRIES = "--max-retries";
     @Option(name=OPT_MAX_RETRIES, aliases=LONGOPT_MAX_RETRIES, usage=USAGE_MAX_RETRIES)
