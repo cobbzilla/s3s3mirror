@@ -23,6 +23,12 @@ public class MirrorMain {
 
     private final CmdLineParser parser = new CmdLineParser(options);
 
+    private final Thread.UncaughtExceptionHandler uncaughtExceptionHandler = new Thread.UncaughtExceptionHandler() {
+        @Override public void uncaughtException(Thread t, Throwable e) {
+            log.error("Uncaught Exception (thread "+t.getName()+"): "+e, e);
+        }
+    };
+
     public static void main (String[] args) {
         MirrorMain main = new MirrorMain(args);
         main.run();
@@ -40,8 +46,10 @@ public class MirrorMain {
         final AmazonS3Client client = new AmazonS3Client(options, new ClientConfiguration().withProtocol(Protocol.HTTP).withMaxConnections(options.getMaxConnections()));
         final MirrorContext context = new MirrorContext(options);
         final MirrorMaster master = new MirrorMaster(client, context);
-        log.debug("Adding shutdown hook");
+
         Runtime.getRuntime().addShutdownHook(context.getStats().getShutdownHook());
+        Thread.setDefaultUncaughtExceptionHandler(uncaughtExceptionHandler);
+
         master.mirror();
     }
 
