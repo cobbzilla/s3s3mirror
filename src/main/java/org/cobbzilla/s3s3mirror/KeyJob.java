@@ -39,10 +39,10 @@ public class KeyJob implements Runnable {
             }
             final CopyObjectRequest request = new CopyObjectRequest(options.getSourceBucket(), key, options.getDestinationBucket(), keydest);
 
-            final ObjectMetadata sourceMetadata = client.getObjectMetadata(options.getSourceBucket(), key);
+            final ObjectMetadata sourceMetadata = getObjectMetadata(options, key);
             request.setNewObjectMetadata(sourceMetadata);
 
-            final AccessControlList objectAcl = client.getObjectAcl(options.getSourceBucket(), key);
+            final AccessControlList objectAcl = getAccessControlList(options, key);
             request.setAccessControlList(objectAcl);
 
             if (options.isDryRun()) {
@@ -77,12 +77,55 @@ public class KeyJob implements Runnable {
                 }
             }
 
+        } catch (Exception e) {
+            log.error("error copying key: "+key+": "+e);
+
         } finally {
             synchronized (notifyLock) {
                 notifyLock.notifyAll();
             }
             if (verbose) log.info("done with "+key);
         }
+    }
+
+    private ObjectMetadata getObjectMetadata(MirrorOptions options, String key) throws Exception {
+        Exception ex = null;
+        for (int tries=0; tries<options.getMaxRetries(); tries++) {
+            try {
+                return client.getObjectMetadata(options.getSourceBucket(), key);
+            } catch (Exception e) {
+                ex = e;
+                if (options.isVerbose()) {
+                    if (tries >= options.getMaxRetries()) {
+                        log.error("getObjectMetadata(" + key + ") failed (try #" + tries + "), giving up");
+                        break;
+                    } else {
+                        log.warn("getObjectMetadata("+key+") failed (try #"+tries+"), retrying...");
+                    }
+                }
+            }
+        }
+        throw ex;
+    }
+
+    private AccessControlList getAccessControlList(MirrorOptions options, String key) throws Exception {
+        Exception ex = null;
+        for (int tries=0; tries<options.getMaxRetries(); tries++) {
+            try {
+                return client.getObjectAcl(options.getSourceBucket(), key);
+            } catch (Exception e) {
+                ex = e;
+                if (options.isVerbose()) {
+                    if (tries >= options.getMaxRetries()) {
+                        log.error("getObjectAcl(" + key + ") failed (try #" + tries + "), giving up");
+                        break;
+                    } else {
+                        log.warn("getObjectAcl("+key+") failed (try #"+tries+"), retrying...");
+                    }
+                }
+            }
+        }
+        throw ex;
     }
 
     private boolean shouldTransfer() {
@@ -120,11 +163,11 @@ public class KeyJob implements Runnable {
                 if (verbose) log.info("Key not found in destination bucket (will copy): "+ keydest);
                 return true;
             } else {
-                log.warn("Error getting metadata for "+options.getDestinationBucket()+"/"+ keydest +" (not copying): "+e);
+                log.warn("Error getting metadata for " + options.getDestinationBucket() + "/" + keydest + " (not copying): " + e);
                 return false;
             }
         } catch (Exception e) {
-            log.warn("Error getting metadata for "+options.getDestinationBucket()+"/"+ keydest +" (not copying): "+e);
+            log.warn("Error getting metadata for " + options.getDestinationBucket() + "/" + keydest + " (not copying): " + e);
             return false;
         }
 
