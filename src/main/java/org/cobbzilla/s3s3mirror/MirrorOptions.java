@@ -37,13 +37,13 @@ public class MirrorOptions implements AWSCredentials {
     @Option(name=OPT_PREFIX, aliases=LONGOPT_PREFIX, usage=USAGE_PREFIX)
     @Getter @Setter private String prefix = null;
 
-    public static final String USAGE_ADDPREFIX = "Give the copied object this prefix (replacing the one specified in --prefix, if any)";
-    public static final String OPT_ADDPREFIX = "-a";
-    public static final String LONGOPT_ADDPREFIX = "--addprefix";
-    @Option(name=OPT_ADDPREFIX, aliases=LONGOPT_ADDPREFIX, usage=USAGE_ADDPREFIX)
-    @Getter @Setter private String addPrefix = null;
+    public static final String USAGE_DEST_PREFIX = "Destination prefix (replacing the one specified in --prefix, if any)";
+    public static final String OPT_DEST_PREFIX= "-d";
+    public static final String LONGOPT_DEST_PREFIX = "--dest-prefix";
+    @Option(name=OPT_DEST_PREFIX, aliases=LONGOPT_DEST_PREFIX, usage= USAGE_DEST_PREFIX)
+    @Getter @Setter private String destPrefix = null;
 
-    public boolean hasAddPrefix() { return addPrefix != null && addPrefix.trim().length() > 0; }
+    public boolean hasDestPrefix() { return destPrefix != null && destPrefix.trim().length() > 0; }
 
     public static final String USAGE_MAX_CONNECTIONS = "Maximum number of connections to S3";
     public static final String OPT_MAX_CONNECTIONS = "-m";

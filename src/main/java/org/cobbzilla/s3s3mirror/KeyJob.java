@@ -33,9 +33,9 @@ public class KeyJob implements Runnable {
             if (!shouldTransfer()) return;
 
             String keydest = key;
-            if (options.hasAddPrefix()) {
+            if (options.hasDestPrefix()) {
                 keydest = key.substring(options.getPrefix().length());
-                keydest = options.getAddPrefix() + keydest;
+                keydest = options.getDestPrefix() + keydest;
             }
             final CopyObjectRequest request = new CopyObjectRequest(options.getSourceBucket(), key, options.getDestinationBucket(), keydest);
 
@@ -135,9 +135,9 @@ public class KeyJob implements Runnable {
         final String key = summary.getKey();
         final boolean verbose = options.isVerbose();
         String keydest = key;
-        if (options.hasAddPrefix()) {
+        if (options.hasDestPrefix()) {
             keydest = key.substring(options.getPrefix().length());
-            keydest = options.getAddPrefix() + keydest;
+            keydest = options.getDestPrefix() + keydest;
         }
 
         if (options.hasCtime()) {
