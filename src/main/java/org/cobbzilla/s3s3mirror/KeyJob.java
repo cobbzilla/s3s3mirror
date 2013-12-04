@@ -92,7 +92,7 @@ public class KeyJob implements Runnable {
         final String key = summary.getKey();
         final boolean verbose = options.isVerbose();
         String keydest = key;
-        if (!options.getAddPrefix().equals("")) {
+        if (options.hasAddPrefix()) {
             keydest = key.substring(options.getPrefix().length());
             keydest = options.getAddPrefix() + keydest;
         }
