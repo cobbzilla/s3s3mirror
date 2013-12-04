@@ -9,9 +9,6 @@ import java.util.Date;
 @Slf4j
 public class KeyJob implements Runnable {
 
-    // todo: make this configurable
-    public static final int MAX_TRIES = 5;
-
     private final AmazonS3Client client;
     private final MirrorContext context;
     private final S3ObjectSummary summary;
@@ -30,35 +27,41 @@ public class KeyJob implements Runnable {
     public void run() {
         final MirrorOptions options = context.getOptions();
         final boolean verbose = options.isVerbose();
+        final int maxRetries = options.getMaxRetries();
         final String key = summary.getKey();
         try {
             if (!shouldTransfer()) return;
 
-            final CopyObjectRequest request = new CopyObjectRequest(options.getSourceBucket(), key, options.getDestinationBucket(), key);
+            String keydest = key;
+            if (options.hasDestPrefix()) {
+                keydest = key.substring(options.getPrefix().length());
+                keydest = options.getDestPrefix() + keydest;
+            }
+            final CopyObjectRequest request = new CopyObjectRequest(options.getSourceBucket(), key, options.getDestinationBucket(), keydest);
 
-            final ObjectMetadata sourceMetadata = client.getObjectMetadata(options.getSourceBucket(), key);
+            final ObjectMetadata sourceMetadata = getObjectMetadata(options, key);
             request.setNewObjectMetadata(sourceMetadata);
 
-            final AccessControlList objectAcl = client.getObjectAcl(options.getSourceBucket(), key);
+            final AccessControlList objectAcl = getAccessControlList(options, key);
             request.setAccessControlList(objectAcl);
 
             if (options.isDryRun()) {
-                log.info("Would have copied "+ key +" to destination");
+                log.info("Would have copied "+ key +" to destination: "+keydest);
             } else {
                 boolean copiedOK = false;
-                for (int tries=0; tries<MAX_TRIES; tries++) {
-                    log.info("copying (try #"+tries+"): "+key);
+                for (int tries=0; tries<maxRetries; tries++) {
+                    if (verbose) log.info("copying (try #"+tries+"): "+key+" to: "+keydest);
                     try {
                         client.copyObject(request);
                         copiedOK = true;
-                        if (verbose) log.info("successfully copied (on try #"+tries+"): "+key);
+                        if (verbose) log.info("successfully copied (on try #"+tries+"): "+key+" to: "+keydest);
                         break;
 
                     } catch (AmazonS3Exception s3e) {
-                        log.error("s3 exception copying (try #"+tries+") "+key+": "+s3e);
+                        log.error("s3 exception copying (try #"+tries+") "+key+" to: "+keydest+": "+s3e);
 
                     } catch (Exception e) {
-                        log.error("unexpected exception copying (try #"+tries+") "+key+": "+e);
+                        log.error("unexpected exception copying (try #"+tries+") "+key+" to: "+keydest+": "+e);
                     }
                     try {
                         Thread.sleep(10);
@@ -74,6 +77,9 @@ public class KeyJob implements Runnable {
                 }
             }
 
+        } catch (Exception e) {
+            log.error("error copying key: "+key+": "+e);
+
         } finally {
             synchronized (notifyLock) {
                 notifyLock.notifyAll();
@@ -82,24 +88,66 @@ public class KeyJob implements Runnable {
         }
     }
 
+    private ObjectMetadata getObjectMetadata(MirrorOptions options, String key) throws Exception {
+        Exception ex = null;
+        for (int tries=0; tries<options.getMaxRetries(); tries++) {
+            try {
+                return client.getObjectMetadata(options.getSourceBucket(), key);
+            } catch (Exception e) {
+                ex = e;
+                if (options.isVerbose()) {
+                    if (tries >= options.getMaxRetries()) {
+                        log.error("getObjectMetadata(" + key + ") failed (try #" + tries + "), giving up");
+                        break;
+                    } else {
+                        log.warn("getObjectMetadata("+key+") failed (try #"+tries+"), retrying...");
+                    }
+                }
+            }
+        }
+        throw ex;
+    }
+
+    private AccessControlList getAccessControlList(MirrorOptions options, String key) throws Exception {
+        Exception ex = null;
+        for (int tries=0; tries<options.getMaxRetries(); tries++) {
+            try {
+                return client.getObjectAcl(options.getSourceBucket(), key);
+            } catch (Exception e) {
+                ex = e;
+                if (options.isVerbose()) {
+                    if (tries >= options.getMaxRetries()) {
+                        log.error("getObjectAcl(" + key + ") failed (try #" + tries + "), giving up");
+                        break;
+                    } else {
+                        log.warn("getObjectAcl("+key+") failed (try #"+tries+"), retrying...");
+                    }
+                }
+            }
+        }
+        throw ex;
+    }
+
     private boolean shouldTransfer() {
 
         final MirrorOptions options = context.getOptions();
 
         final String key = summary.getKey();
         final boolean verbose = options.isVerbose();
+        String keydest = key;
+        if (options.hasDestPrefix()) {
+            keydest = key.substring(options.getPrefix().length());
+            keydest = options.getDestPrefix() + keydest;
+        }
 
         if (options.hasCtime()) {
             final Date lastModified = summary.getLastModified();
             if (lastModified == null) {
-                if (verbose) {
-                    log.info("No Last-Modified header for key: " + key);
-                }
+                if (verbose) log.info("No Last-Modified header for key: " + key);
+
             } else {
                 if (options.getNowTime() - lastModified.getTime() > options.getCtimeMillis()) {
-                    if (verbose) {
-                        log.info("key is older than "+options.getCtime()+" days (not copying)");
-                    }
+                    if (verbose) log.info("key is older than "+options.getCtime()+" days (not copying)");
                     return false;
                 }
             }
@@ -109,26 +157,25 @@ public class KeyJob implements Runnable {
 
         final ObjectMetadata metadata;
         try {
-            metadata = client.getObjectMetadata(options.getDestinationBucket(), key);
+            metadata = client.getObjectMetadata(options.getDestinationBucket(), keydest);
         } catch (AmazonS3Exception e) {
             if (e.getStatusCode() == 404) {
-                if (verbose) log.info("Key not found in destination bucket (will copy): "+ key);
+                if (verbose) log.info("Key not found in destination bucket (will copy): "+ keydest);
                 return true;
             } else {
-                log.info("Error getting metadata for "+options.getDestinationBucket()+"/"+ key +" (not copying): "+e);
+                log.warn("Error getting metadata for " + options.getDestinationBucket() + "/" + keydest + " (not copying): " + e);
                 return false;
             }
         } catch (Exception e) {
-            log.info("Error getting metadata for "+options.getDestinationBucket()+"/"+ key +" (not copying): "+e);
+            log.warn("Error getting metadata for " + options.getDestinationBucket() + "/" + keydest + " (not copying): " + e);
             return false;
         }
 
         final KeyFingerprint destFingerprint = new KeyFingerprint(metadata.getContentLength(), metadata.getETag());
 
         final boolean objectChanged = !sourceFingerprint.equals(destFingerprint);
-        if (verbose) {
-            if (!objectChanged) log.info("Destination file is same as source, not copying: "+ key);
-        }
+        if (verbose && !objectChanged) log.info("Destination file is same as source, not copying: "+ key);
+
         return objectChanged;
     }
 

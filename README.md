@@ -45,7 +45,32 @@ Which makes me wonder if there is any way to do this faster. I'm sure there must
     -c (--ctime) N           : Only copy objects whose Last-Modified date is younger than this many days
     -m (--max-connections) N : Maximum number of connections to S3 (default 100)
     -n (--dry-run)           : Do not actually do anything, but show what would be done (default false)
+    -r (--max-retries) N     : Maximum number of retries for S3 requests (default is 5)
     -p (--prefix) VAL        : Only copy objects whose keys start with this prefix
+    -d (--dest-prefix) VAL   : Destination prefix (replacing the one specified in --prefix, if any)
     -t (--max-threads) N     : Maximum number of threads (default is same as --max-connections)
     -v (--verbose)           : Verbose output (default false)
+
+### Examples
+
+Copy everything from a bucket named "source" to another bucket named "dest"
+
+    s3s3mirror.sh source dest
+
+Copy everything from "source" to "dest", but only copy objects created within the past week
+
+    s3s3mirror.sh -c 7 source dest
+
+Copy everything from "source/foo" to "dest/bar"
+
+    s3s3mirror.sh -p foo -d bar source dest
+
+Copy within a single bucket -- copy everything from "source/foo" to "source/bar"
+
+    s3s3mirror.sh -p foo -d bar source source
+
+BAD IDEA: If copying within a single bucket, do *not* put the destination below the source
+
+    s3s3mirror.sh -p foo -d foo/subfolder source source
+*This is likely to cause infinite recursion and send your AWS bill into the stratosphere!*
 
