@@ -54,7 +54,7 @@ public class KeyJob implements Runnable {
                     if (verbose) log.info("copying (try #"+tries+"): "+key+" to: "+keydest);
                     try {
                         client.copyObject(request);
-                        stats.s3opCount++;
+                        stats.s3copyCount++;
                         stats.bytesCopied += sourceMetadata.getContentLength();
                         copiedOK = true;
                         if (verbose) log.info("successfully copied (on try #"+tries+"): "+key+" to: "+keydest);
@@ -96,7 +96,7 @@ public class KeyJob implements Runnable {
         for (int tries=0; tries<options.getMaxRetries(); tries++) {
             try {
                 final ObjectMetadata objectMetadata = client.getObjectMetadata(options.getSourceBucket(), key);
-                context.getStats().s3opCount++;
+                context.getStats().s3getCount++;
                 return objectMetadata;
 
             } catch (Exception e) {
@@ -119,7 +119,7 @@ public class KeyJob implements Runnable {
         for (int tries=0; tries<options.getMaxRetries(); tries++) {
             try {
                 final AccessControlList objectAcl = client.getObjectAcl(options.getSourceBucket(), key);
-                context.getStats().s3opCount++;
+                context.getStats().s3getCount++;
                 return objectAcl;
 
             } catch (Exception e) {

@@ -24,7 +24,8 @@ public class MirrorStats {
     public volatile long objectsCopied;
     public volatile long copyErrors;
 
-    public volatile long s3opCount;
+    public volatile long s3copyCount;
+    public volatile long s3getCount;
     public volatile long bytesCopied;
 
     public static final long HOUR = TimeUnit.HOURS.toMillis(1);
@@ -44,7 +45,8 @@ public class MirrorStats {
                 + "read rate: "+readRate+"/minute\n"
                 + "copy rate: "+copyRate+"/minute\n"
                 + "bytes copied: "+formatBytes(bytesCopied)+"\n"
-                + "S3 operations: "+s3opCount+"\n";
+                + "GET operations: "+s3getCount+"\n"
+                + "COPY operations: "+ s3copyCount+"\n";
     }
 
     public static final long KB = 1024;

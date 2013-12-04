@@ -35,7 +35,7 @@ public class KeyLister implements Runnable {
 
         final ListObjectsRequest request = new ListObjectsRequest(options.getSourceBucket(), options.getPrefix(), null, null, fetchSize);
         listing = client.listObjects(request);
-        context.getStats().s3opCount++;
+        context.getStats().s3getCount++;
         synchronized (summaries) {
             final List<S3ObjectSummary> objectSummaries = listing.getObjectSummaries();
             summaries.addAll(objectSummaries);
@@ -92,7 +92,7 @@ public class KeyLister implements Runnable {
         for (int tries=0; tries<maxRetries; tries++) {
             try {
                 ObjectListing next = client.listNextBatchOfObjects(listing);
-                context.getStats().s3opCount++;
+                context.getStats().s3getCount++;
                 if (verbose) log.info("successfully got next batch of objects (on try #"+tries+")");
                 return next;
 
