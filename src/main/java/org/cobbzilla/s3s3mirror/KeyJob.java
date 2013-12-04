@@ -26,6 +26,7 @@ public class KeyJob implements Runnable {
     @Override
     public void run() {
         final MirrorOptions options = context.getOptions();
+        final MirrorStats stats = context.getStats();
         final boolean verbose = options.isVerbose();
         final int maxRetries = options.getMaxRetries();
         final String key = summary.getKey();
@@ -53,6 +54,8 @@ public class KeyJob implements Runnable {
                     if (verbose) log.info("copying (try #"+tries+"): "+key+" to: "+keydest);
                     try {
                         client.copyObject(request);
+                        stats.s3opCount++;
+                        stats.bytesCopied += sourceMetadata.getContentLength();
                         copiedOK = true;
                         if (verbose) log.info("successfully copied (on try #"+tries+"): "+key+" to: "+keydest);
                         break;
@@ -92,7 +95,10 @@ public class KeyJob implements Runnable {
         Exception ex = null;
         for (int tries=0; tries<options.getMaxRetries(); tries++) {
             try {
-                return client.getObjectMetadata(options.getSourceBucket(), key);
+                final ObjectMetadata objectMetadata = client.getObjectMetadata(options.getSourceBucket(), key);
+                context.getStats().s3opCount++;
+                return objectMetadata;
+
             } catch (Exception e) {
                 ex = e;
                 if (options.isVerbose()) {
@@ -112,7 +118,10 @@ public class KeyJob implements Runnable {
         Exception ex = null;
         for (int tries=0; tries<options.getMaxRetries(); tries++) {
             try {
-                return client.getObjectAcl(options.getSourceBucket(), key);
+                final AccessControlList objectAcl = client.getObjectAcl(options.getSourceBucket(), key);
+                context.getStats().s3opCount++;
+                return objectAcl;
+
             } catch (Exception e) {
                 ex = e;
                 if (options.isVerbose()) {
@@ -157,7 +166,7 @@ public class KeyJob implements Runnable {
 
         final ObjectMetadata metadata;
         try {
-            metadata = client.getObjectMetadata(options.getDestinationBucket(), keydest);
+            metadata = getObjectMetadata(options, keydest);
         } catch (AmazonS3Exception e) {
             if (e.getStatusCode() == 404) {
                 if (verbose) log.info("Key not found in destination bucket (will copy): "+ keydest);
