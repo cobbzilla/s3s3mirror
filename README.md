@@ -30,11 +30,13 @@ Which makes me wonder if there is any way to do this faster. I'm sure there must
 ### System Requirements
 
 * Java 6
-* Maven 3
 
 ### Building
 
     mvn package
+
+Note that s3s3mirror now has a prebuilt jar checked in to github, so you'll only need to do this if you've been playing with the source code.
+The above command requires that Maven 3 is installed.
 
 ### Usage
 
