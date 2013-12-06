@@ -99,6 +99,9 @@ public class KeyJob implements Runnable {
                 context.getStats().s3getCount++;
                 return objectMetadata;
 
+            } catch (AmazonS3Exception e) {
+                if (e.getStatusCode() == 404) throw e;
+
             } catch (Exception e) {
                 ex = e;
                 if (options.isVerbose()) {
@@ -155,8 +158,8 @@ public class KeyJob implements Runnable {
                 if (verbose) log.info("No Last-Modified header for key: " + key);
 
             } else {
-                if (options.getNowTime() - lastModified.getTime() > options.getCtimeMillis()) {
-                    if (verbose) log.info("key is older than "+options.getCtime()+" days (not copying)");
+                if (lastModified.getTime() < options.getMaxAge()) {
+                    if (verbose) log.info("key (lastmod="+lastModified+") is older than "+options.getCtime()+" days (cutoff="+options.getMaxAgeDate()+"), not copying");
                     return false;
                 }
             }
@@ -187,6 +190,5 @@ public class KeyJob implements Runnable {
 
         return objectChanged;
     }
-
 
 }

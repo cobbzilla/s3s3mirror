@@ -6,6 +6,7 @@ import lombok.Setter;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 
+import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 public class MirrorOptions implements AWSCredentials {
@@ -72,6 +73,15 @@ public class MirrorOptions implements AWSCredentials {
     public long getCtimeMillis() { return TimeUnit.DAYS.toMillis(ctime); }
 
     @Getter private long nowTime = System.currentTimeMillis();
+    @Getter private long maxAge;
+    @Getter private Date maxAgeDate;
+
+    public void initDerivedFields() {
+        if (hasCtime()) {
+            this.maxAge = getNowTime() - getCtimeMillis();
+            this.maxAgeDate = new Date(maxAge);
+        }
+    }
 
     @Argument(index=0, required=true, usage="source bucket") @Getter @Setter private String source;
     @Argument(index=1, required=true, usage="destination bucket") @Getter @Setter private String destination;

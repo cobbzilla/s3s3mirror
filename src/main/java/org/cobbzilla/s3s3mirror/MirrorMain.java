@@ -70,6 +70,7 @@ public class MirrorMain {
         if (!options.hasAwsKeys()) {
             throw new IllegalStateException("ENV vars not defined: " + MirrorOptions.AWS_ACCESS_KEY + " and/or " + MirrorOptions.AWS_SECRET_KEY);
         }
+        options.initDerivedFields();
     }
 
 }
