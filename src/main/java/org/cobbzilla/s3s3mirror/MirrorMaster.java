@@ -7,6 +7,9 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.List;
 import java.util.concurrent.*;
 
+/**
+ * Manages the Starts a KeyLister and sends batches of keys to the ExecutorService for handling by KeyJobs
+ */
 @Slf4j
 public class MirrorMaster {
 
@@ -76,7 +79,7 @@ public class MirrorMaster {
         } finally {
             while (workQueue.size() > 0) {
                 // wait for the queue to be empty
-                if (sleep(100)) return;
+                if (sleep(100)) break;
             }
             // this will wait for currently executing tasks to finish
             executorService.shutdown();
