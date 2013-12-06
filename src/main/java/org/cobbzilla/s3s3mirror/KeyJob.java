@@ -159,7 +159,7 @@ public class KeyJob implements Runnable {
 
             } else {
                 if (lastModified.getTime() < options.getMaxAge()) {
-                    if (verbose) log.info("key (lastmod="+lastModified+") is older than "+options.getCtime()+" days (cutoff="+options.getMaxAgeDate()+"), not copying");
+                    if (verbose) log.info("key "+keydest+" (lastmod="+lastModified+") is older than "+options.getCtime()+" days (cutoff="+options.getMaxAgeDate()+"), not copying");
                     return false;
                 }
             }
