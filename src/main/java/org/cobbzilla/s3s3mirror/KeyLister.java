@@ -35,11 +35,11 @@ public class KeyLister implements Runnable {
 
         final ListObjectsRequest request = new ListObjectsRequest(options.getSourceBucket(), options.getPrefix(), null, null, fetchSize);
         listing = client.listObjects(request);
-        context.getStats().s3getCount++;
+        context.getStats().s3getCount.incrementAndGet();
         synchronized (summaries) {
             final List<S3ObjectSummary> objectSummaries = listing.getObjectSummaries();
             summaries.addAll(objectSummaries);
-            context.getStats().objectsRead += objectSummaries.size();
+            context.getStats().objectsRead.addAndGet(objectSummaries.size());
             if (options.isVerbose()) log.info("added initial set of "+objectSummaries.size()+" keys");
         }
     }
@@ -59,7 +59,7 @@ public class KeyLister implements Runnable {
                         synchronized (summaries) {
                             final List<S3ObjectSummary> objectSummaries = listing.getObjectSummaries();
                             summaries.addAll(objectSummaries);
-                            context.getStats().objectsRead += objectSummaries.size();
+                            context.getStats().objectsRead.addAndGet(objectSummaries.size());
                             if (verbose) log.info("queued next set of "+objectSummaries.size()+" keys (total now="+getSize()+")");
                         }
 
@@ -92,7 +92,7 @@ public class KeyLister implements Runnable {
         for (int tries=0; tries<maxRetries; tries++) {
             try {
                 ObjectListing next = client.listNextBatchOfObjects(listing);
-                context.getStats().s3getCount++;
+                context.getStats().s3getCount.incrementAndGet();
                 if (verbose) log.info("successfully got next batch of objects (on try #"+tries+")");
                 return next;
 

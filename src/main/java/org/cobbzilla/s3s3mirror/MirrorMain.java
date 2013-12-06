@@ -14,6 +14,9 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 
+/**
+ * Provides the "main" method. Responsible for parsing options and setting up the MirrorMaster to manage the copy.
+ */
 @AllArgsConstructor @Slf4j
 public class MirrorMain {
 

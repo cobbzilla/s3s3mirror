@@ -6,6 +6,9 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Date;
 
+/**
+ * Handles a single key. Determines if it should be copied, and if so, performs the copy operation.
+ */
 @Slf4j
 public class KeyJob implements Runnable {
 
@@ -54,8 +57,8 @@ public class KeyJob implements Runnable {
                     if (verbose) log.info("copying (try #"+tries+"): "+key+" to: "+keydest);
                     try {
                         client.copyObject(request);
-                        stats.s3copyCount++;
-                        stats.bytesCopied += sourceMetadata.getContentLength();
+                        stats.s3copyCount.incrementAndGet();
+                        stats.bytesCopied.addAndGet(sourceMetadata.getContentLength());
                         copiedOK = true;
                         if (verbose) log.info("successfully copied (on try #"+tries+"): "+key+" to: "+keydest);
                         break;
@@ -74,9 +77,9 @@ public class KeyJob implements Runnable {
                     }
                 }
                 if (copiedOK) {
-                    context.getStats().objectsCopied++;
+                    context.getStats().objectsCopied.incrementAndGet();
                 } else {
-                    context.getStats().copyErrors++;
+                    context.getStats().copyErrors.incrementAndGet();
                 }
             }
 
@@ -96,7 +99,7 @@ public class KeyJob implements Runnable {
         for (int tries=0; tries<options.getMaxRetries(); tries++) {
             try {
                 final ObjectMetadata objectMetadata = client.getObjectMetadata(options.getSourceBucket(), key);
-                context.getStats().s3getCount++;
+                context.getStats().s3getCount.incrementAndGet();
                 return objectMetadata;
 
             } catch (AmazonS3Exception e) {
@@ -122,7 +125,7 @@ public class KeyJob implements Runnable {
         for (int tries=0; tries<options.getMaxRetries(); tries++) {
             try {
                 final AccessControlList objectAcl = client.getObjectAcl(options.getSourceBucket(), key);
-                context.getStats().s3getCount++;
+                context.getStats().s3getCount.incrementAndGet();
                 return objectAcl;
 
             } catch (Exception e) {
@@ -190,5 +193,4 @@ public class KeyJob implements Runnable {
 
         return objectChanged;
     }
-
 }
