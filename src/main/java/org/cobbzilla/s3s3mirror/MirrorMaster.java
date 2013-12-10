@@ -36,7 +36,7 @@ public class MirrorMaster {
             }
         };
 
-        final ExecutorService executorService = new ThreadPoolExecutor(options.getMaxThreads(), options.getMaxThreads(), 1, TimeUnit.MINUTES, workQueue, rejectedExecutionHandler);
+        final ThreadPoolExecutor executorService = new ThreadPoolExecutor(options.getMaxThreads(), options.getMaxThreads(), 1, TimeUnit.MINUTES, workQueue, rejectedExecutionHandler);
         final KeyLister lister = new KeyLister(client, context, maxQueueCapacity);
         executorService.submit(lister);
 
@@ -76,8 +76,12 @@ public class MirrorMaster {
                     if (sleep(100)) return;
                 }
             }
+
+        } catch (Exception e) {
+            log.error("Unexpected exception in MirrorMaster: "+e, e);
+
         } finally {
-            while (workQueue.size() > 0) {
+            while (workQueue.size() > 0 || executorService.getActiveCount() > 0) {
                 // wait for the queue to be empty
                 if (sleep(100)) break;
             }

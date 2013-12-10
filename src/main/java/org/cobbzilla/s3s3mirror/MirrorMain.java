@@ -3,7 +3,6 @@ package org.cobbzilla.s3s3mirror;
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.Protocol;
 import com.amazonaws.services.s3.AmazonS3Client;
-import lombok.AllArgsConstructor;
 import lombok.Cleanup;
 import lombok.Getter;
 import lombok.Setter;
@@ -17,7 +16,7 @@ import java.io.FileReader;
 /**
  * Provides the "main" method. Responsible for parsing options and setting up the MirrorMaster to manage the copy.
  */
-@AllArgsConstructor @Slf4j
+@Slf4j
 public class MirrorMain {
 
     @Getter @Setter private String[] args;
@@ -32,28 +31,43 @@ public class MirrorMain {
         }
     };
 
+    @Getter private AmazonS3Client client;
+    @Getter private MirrorContext context;
+    @Getter private MirrorMaster master;
+
+    public MirrorMain(String[] args) { this.args = args; }
+
     public static void main (String[] args) {
         MirrorMain main = new MirrorMain(args);
         main.run();
     }
 
     public void run() {
-        try {
-            parseArguments();
-        } catch (Exception e) {
-            System.err.println(e.getMessage());
-            parser.printUsage(System.err);
-            System.exit(1);
-        }
-
-        final AmazonS3Client client = new AmazonS3Client(options, new ClientConfiguration().withProtocol(Protocol.HTTP).withMaxConnections(options.getMaxConnections()));
-        final MirrorContext context = new MirrorContext(options);
-        final MirrorMaster master = new MirrorMaster(client, context);
-
-        Runtime.getRuntime().addShutdownHook(context.getStats().getShutdownHook());
-        Thread.setDefaultUncaughtExceptionHandler(uncaughtExceptionHandler);
-
+        init();
         master.mirror();
+    }
+
+    public void init() {
+        if (client == null) {
+            try {
+                parseArguments();
+            } catch (Exception e) {
+                System.err.println(e.getMessage());
+                parser.printUsage(System.err);
+                System.exit(1);
+            }
+
+            client = getAmazonS3Client();
+            context = new MirrorContext(options);
+            master = new MirrorMaster(client, context);
+
+            Runtime.getRuntime().addShutdownHook(context.getStats().getShutdownHook());
+            Thread.setDefaultUncaughtExceptionHandler(uncaughtExceptionHandler);
+        }
+    }
+
+    protected AmazonS3Client getAmazonS3Client() {
+        return new AmazonS3Client(options, new ClientConfiguration().withProtocol(Protocol.HTTP).withMaxConnections(options.getMaxConnections()));
     }
 
     protected void parseArguments() throws Exception {

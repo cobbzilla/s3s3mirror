@@ -1,11 +1,8 @@
 package org.cobbzilla.s3s3mirror;
 
-import org.cobbzilla.s3s3mirror.MirrorMain;
-import org.cobbzilla.s3s3mirror.MirrorOptions;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
-import static org.junit.Assert.assertEquals;
 
 public class MirrorMainTest {
 

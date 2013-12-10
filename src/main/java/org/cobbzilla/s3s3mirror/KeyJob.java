@@ -43,7 +43,7 @@ public class KeyJob implements Runnable {
             }
             final CopyObjectRequest request = new CopyObjectRequest(options.getSourceBucket(), key, options.getDestinationBucket(), keydest);
 
-            final ObjectMetadata sourceMetadata = getObjectMetadata(options, key);
+            final ObjectMetadata sourceMetadata = getObjectMetadata(options.getSourceBucket(), key, options);
             request.setNewObjectMetadata(sourceMetadata);
 
             final AccessControlList objectAcl = getAccessControlList(options, key);
@@ -94,11 +94,11 @@ public class KeyJob implements Runnable {
         }
     }
 
-    private ObjectMetadata getObjectMetadata(MirrorOptions options, String key) throws Exception {
+    private ObjectMetadata getObjectMetadata(String bucket, String key, MirrorOptions options) throws Exception {
         Exception ex = null;
         for (int tries=0; tries<options.getMaxRetries(); tries++) {
             try {
-                final ObjectMetadata objectMetadata = client.getObjectMetadata(options.getSourceBucket(), key);
+                final ObjectMetadata objectMetadata = client.getObjectMetadata(bucket, key);
                 context.getStats().s3getCount.incrementAndGet();
                 return objectMetadata;
 
@@ -172,7 +172,7 @@ public class KeyJob implements Runnable {
 
         final ObjectMetadata metadata;
         try {
-            metadata = getObjectMetadata(options, keydest);
+            metadata = getObjectMetadata(options.getDestinationBucket(), keydest, options);
         } catch (AmazonS3Exception e) {
             if (e.getStatusCode() == 404) {
                 if (verbose) log.info("Key not found in destination bucket (will copy): "+ keydest);
