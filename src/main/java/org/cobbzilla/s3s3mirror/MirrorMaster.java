@@ -13,6 +13,8 @@ import java.util.concurrent.*;
 @Slf4j
 public class MirrorMaster {
 
+    public static final String VERSION = System.getProperty("s3s3mirror.version");
+
     private final AmazonS3Client client;
     private final MirrorContext context;
     private final Object notifyLock = new Object();
@@ -23,6 +25,8 @@ public class MirrorMaster {
     }
 
     public void mirror() {
+
+        log.info("version "+VERSION+" starting");
 
         final MirrorOptions options = context.getOptions();
         final boolean verbose = options.isVerbose();
