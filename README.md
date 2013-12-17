@@ -50,6 +50,7 @@ The above command requires that Maven 3 is installed.
     -r (--max-retries) N     : Maximum number of retries for S3 requests (default 5)
     -p (--prefix) VAL        : Only copy objects whose keys start with this prefix
     -d (--dest-prefix) VAL   : Destination prefix (replacing the one specified in --prefix, if any)
+    -X (--delete-removed)    : Delete objects from the destination bucket if they do not exist in the source bucket
     -t (--max-threads) N     : Maximum number of threads (default 100)
     -v (--verbose)           : Verbose output (default false)
 

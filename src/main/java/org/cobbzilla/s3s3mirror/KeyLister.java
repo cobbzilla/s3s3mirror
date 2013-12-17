@@ -24,7 +24,7 @@ public class KeyLister implements Runnable {
 
     public boolean isDone () { return done.get(); }
 
-    public KeyLister(AmazonS3Client client, MirrorContext context, int maxQueueCapacity) {
+    public KeyLister(AmazonS3Client client, MirrorContext context, int maxQueueCapacity, String bucket, String prefix) {
         this.client = client;
         this.context = context;
         this.maxQueueCapacity = maxQueueCapacity;
@@ -33,7 +33,7 @@ public class KeyLister implements Runnable {
         int fetchSize = options.getMaxThreads();
         this.summaries = new ArrayList<S3ObjectSummary>(10*fetchSize);
 
-        final ListObjectsRequest request = new ListObjectsRequest(options.getSourceBucket(), options.getPrefix(), null, null, fetchSize);
+        final ListObjectsRequest request = new ListObjectsRequest(bucket, prefix, null, null, fetchSize);
         listing = client.listObjects(request);
         context.getStats().s3getCount.incrementAndGet();
         synchronized (summaries) {

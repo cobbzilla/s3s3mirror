@@ -38,13 +38,17 @@ public class MirrorOptions implements AWSCredentials {
     @Option(name=OPT_PREFIX, aliases=LONGOPT_PREFIX, usage=USAGE_PREFIX)
     @Getter @Setter private String prefix = null;
 
+    public boolean hasPrefix () { return prefix != null && prefix.length() > 0; }
+    public int getPrefixLength () { return prefix == null ? 0 : prefix.length(); }
+
     public static final String USAGE_DEST_PREFIX = "Destination prefix (replacing the one specified in --prefix, if any)";
     public static final String OPT_DEST_PREFIX= "-d";
     public static final String LONGOPT_DEST_PREFIX = "--dest-prefix";
     @Option(name=OPT_DEST_PREFIX, aliases=LONGOPT_DEST_PREFIX, usage= USAGE_DEST_PREFIX)
     @Getter @Setter private String destPrefix = null;
 
-    public boolean hasDestPrefix() { return destPrefix != null && destPrefix.trim().length() > 0; }
+    public boolean hasDestPrefix() { return destPrefix != null && destPrefix.length() > 0; }
+    public int getDestPrefixLength () { return destPrefix == null ? 0 : destPrefix.length(); }
 
     public static final String USAGE_MAX_CONNECTIONS = "Maximum number of connections to S3 (default 100)";
     public static final String OPT_MAX_CONNECTIONS = "-m";
@@ -75,6 +79,12 @@ public class MirrorOptions implements AWSCredentials {
     @Getter private long nowTime = System.currentTimeMillis();
     @Getter private long maxAge;
     @Getter private Date maxAgeDate;
+
+    public static final String USAGE_DELETE_REMOVED = "Delete objects from the destination bucket if they do not exist in the source bucket";
+    public static final String OPT_DELETE_REMOVED = "-X";
+    public static final String LONGOPT_DELETE_REMOVED = "--delete-removed";
+    @Option(name=OPT_DELETE_REMOVED, aliases=LONGOPT_DELETE_REMOVED, usage=USAGE_DELETE_REMOVED)
+    @Getter @Setter private boolean deleteRemoved = false;
 
     public void initDerivedFields() {
         if (hasCtime()) {
