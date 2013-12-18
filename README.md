@@ -72,6 +72,10 @@ Copy everything from "source/foo" to "dest/bar"
 
     s3s3mirror.sh -p foo -d bar source dest
 
+Copy everything from "source/foo" to "dest/bar" and delete anything in "dest/bar" that does not exist in "source/foo"
+
+    s3s3mirror.sh -p foo -d bar -X source dest
+
 Copy within a single bucket -- copy everything from "source/foo" to "source/bar"
 
     s3s3mirror.sh -p foo -d bar source source
