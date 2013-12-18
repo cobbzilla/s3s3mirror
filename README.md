@@ -45,6 +45,8 @@ The above command requires that Maven 3 is installed.
 ### Options
 
     -c (--ctime) N           : Only copy objects whose Last-Modified date is younger than this many days
+                               For other time units, use these suffixes: y (years), M (months), d (days), w (weeks),
+                                                                         h (hours), m (minutes), s (seconds)
     -m (--max-connections) N : Maximum number of connections to S3 (default 100)
     -n (--dry-run)           : Do not actually do anything, but show what would be done (default false)
     -r (--max-retries) N     : Maximum number of retries for S3 requests (default 5)
@@ -60,9 +62,11 @@ Copy everything from a bucket named "source" to another bucket named "dest"
 
     s3s3mirror.sh source dest
 
-Copy everything from "source" to "dest", but only copy objects created within the past week
+Copy everything from "source" to "dest", but only copy objects created within the past week (these are equivalent)
 
     s3s3mirror.sh -c 7 source dest
+    s3s3mirror.sh -c 7d source dest
+    s3s3mirror.sh -c 1w source dest
 
 Copy everything from "source/foo" to "dest/bar"
 

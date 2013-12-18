@@ -3,11 +3,11 @@ package org.cobbzilla.s3s3mirror;
 import com.amazonaws.auth.AWSCredentials;
 import lombok.Getter;
 import lombok.Setter;
+import org.joda.time.DateTime;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 
 import java.util.Date;
-import java.util.concurrent.TimeUnit;
 
 public class MirrorOptions implements AWSCredentials {
 
@@ -68,17 +68,41 @@ public class MirrorOptions implements AWSCredentials {
     @Option(name=OPT_MAX_RETRIES, aliases=LONGOPT_MAX_RETRIES, usage=USAGE_MAX_RETRIES)
     @Getter @Setter private int maxRetries = 5;
 
-    public static final String USAGE_CTIME = "Only copy objects whose Last-Modified date is younger than this many days";
+    public static final String USAGE_CTIME = "Only copy objects whose Last-Modified date is younger than this many days. " +
+            "For other time units, use these suffixes: y (years), M (months), d (days), w (weeks), h (hours), m (minutes), s (seconds)";
     public static final String OPT_CTIME = "-c";
     public static final String LONGOPT_CTIME = "--ctime";
     @Option(name=OPT_CTIME, aliases=LONGOPT_CTIME, usage=USAGE_CTIME)
-    @Getter @Setter private Long ctime = null;
+    @Getter @Setter private String ctime = null;
     public boolean hasCtime() { return ctime != null; }
-    public long getCtimeMillis() { return TimeUnit.DAYS.toMillis(ctime); }
+
+    private long initMaxAge() {
+
+        DateTime dateTime = new DateTime(nowTime);
+
+        // all digits -- assume "days"
+        if (ctime.matches("^[0-9]+$")) return dateTime.minusDays(Integer.parseInt(ctime)).getMillis();
+
+        // ensure there is at leaste one digit, and exactly one character suffix, and the char is a legal option
+        if (!ctime.matches("^[0-9]+[yMwdhms]$")) throw new IllegalArgumentException("Invalid option for ctime: "+ctime);
+
+        if (ctime.endsWith("y")) return dateTime.minusYears(getCtimeNumber(ctime)).getMillis();
+        if (ctime.endsWith("M")) return dateTime.minusMonths(getCtimeNumber(ctime)).getMillis();
+        if (ctime.endsWith("w")) return dateTime.minusWeeks(getCtimeNumber(ctime)).getMillis();
+        if (ctime.endsWith("d")) return dateTime.minusDays(getCtimeNumber(ctime)).getMillis();
+        if (ctime.endsWith("h")) return dateTime.minusHours(getCtimeNumber(ctime)).getMillis();
+        if (ctime.endsWith("m")) return dateTime.minusMinutes(getCtimeNumber(ctime)).getMillis();
+        if (ctime.endsWith("s")) return dateTime.minusSeconds(getCtimeNumber(ctime)).getMillis();
+        throw new IllegalArgumentException("Invalid option for ctime: "+ctime);
+    }
+
+    private int getCtimeNumber(String ctime) {
+        return Integer.parseInt(ctime.substring(0, ctime.length() - 1));
+    }
 
     @Getter private long nowTime = System.currentTimeMillis();
     @Getter private long maxAge;
-    @Getter private Date maxAgeDate;
+    @Getter private String maxAgeDate;
 
     public static final String USAGE_DELETE_REMOVED = "Delete objects from the destination bucket if they do not exist in the source bucket";
     public static final String OPT_DELETE_REMOVED = "-X";
@@ -88,8 +112,8 @@ public class MirrorOptions implements AWSCredentials {
 
     public void initDerivedFields() {
         if (hasCtime()) {
-            this.maxAge = getNowTime() - getCtimeMillis();
-            this.maxAgeDate = new Date(maxAge);
+            this.maxAge = initMaxAge();
+            this.maxAgeDate = new Date(maxAge).toString();
         }
     }
 
