@@ -40,7 +40,7 @@ The above command requires that Maven 3 is installed.
 
 ### Usage
 
-    s3s3mirror.sh [options] <source-bucket> <destination-bucket>
+    s3s3mirror.sh [options] <source-bucket>[/src-prefix/path/...] <destination-bucket>[/dest-prefix/path/...]
 
 ### Options
 
@@ -62,26 +62,33 @@ Copy everything from a bucket named "source" to another bucket named "dest"
 
     s3s3mirror.sh source dest
 
-Copy everything from "source" to "dest", but only copy objects created within the past week (these are equivalent)
+Copy everything from "source" to "dest", but only copy objects created within the past week
 
     s3s3mirror.sh -c 7 source dest
     s3s3mirror.sh -c 7d source dest
     s3s3mirror.sh -c 1w source dest
+    s3s3mirror.sh --ctime 1w source dest
 
 Copy everything from "source/foo" to "dest/bar"
 
+    s3s3mirror.sh source/foo dest/bar
     s3s3mirror.sh -p foo -d bar source dest
 
 Copy everything from "source/foo" to "dest/bar" and delete anything in "dest/bar" that does not exist in "source/foo"
 
+    s3s3mirror.sh -X source/foo dest/bar
+    s3s3mirror.sh --delete-removed source/foo dest/bar
     s3s3mirror.sh -p foo -d bar -X source dest
+    s3s3mirror.sh -p foo -d bar --delete-removed source dest
 
 Copy within a single bucket -- copy everything from "source/foo" to "source/bar"
 
+    s3s3mirror.sh source/foo source/bar
     s3s3mirror.sh -p foo -d bar source source
 
 BAD IDEA: If copying within a single bucket, do *not* put the destination below the source
 
+    s3s3mirror.sh source/foo source/foo/subfolder
     s3s3mirror.sh -p foo -d foo/subfolder source source
-*This is likely to cause infinite recursion and send your AWS bill into the stratosphere!*
+*This might cause recursion and raise your AWS bill unnecessarily*
 

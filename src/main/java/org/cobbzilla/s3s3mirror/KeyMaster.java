@@ -75,14 +75,14 @@ public abstract class KeyMaster implements Runnable {
 
         final int maxQueueCapacity = MirrorMaster.getMaxQueueCapacity(options);
 
-        final KeyLister lister = new KeyLister(client, context, maxQueueCapacity, getBucket(options), getPrefix(options));
-        executorService.submit(lister);
-
-        List<S3ObjectSummary> summaries = lister.getNextBatch();
-        if (verbose) log.info(summaries.size()+" keys found in first batch from source bucket -- processing...");
-
         int counter = 0;
         try {
+            final KeyLister lister = new KeyLister(client, context, maxQueueCapacity, getBucket(options), getPrefix(options));
+            executorService.submit(lister);
+
+            List<S3ObjectSummary> summaries = lister.getNextBatch();
+            if (verbose) log.info(summaries.size()+" keys found in first batch from source bucket -- processing...");
+
             while (true) {
                 for (S3ObjectSummary summary : summaries) {
                     while (workQueue.size() >= maxQueueCapacity) {

@@ -42,8 +42,8 @@ public class KeyDeleteJob extends KeyJob {
                 for (int tries=0; tries<maxRetries; tries++) {
                     if (verbose) log.info("deleting (try #"+tries+"): "+key);
                     try {
-                        client.deleteObject(request);
                         stats.s3deleteCount.incrementAndGet();
+                        client.deleteObject(request);
                         deletedOK = true;
                         if (verbose) log.info("successfully deleted (on try #"+tries+"): "+key);
                         break;

@@ -11,6 +11,7 @@ import org.junit.Test;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.cobbzilla.s3s3mirror.MirrorOptions.*;
 import static org.cobbzilla.s3s3mirror.TestFile.Clean;
 import static org.cobbzilla.s3s3mirror.TestFile.Copy;
 import static org.junit.Assert.assertEquals;
@@ -24,7 +25,6 @@ public class MirrorTest {
 
     public static final String SOURCE = System.getenv(SOURCE_ENV_VAR);
     public static final String DESTINATION = System.getenv(DEST_ENV_VAR);
-    public static final int TEST_FILE_SIZE = 1024;
 
     private List<S3Asset> stuffToCleanup = new ArrayList<S3Asset>();
 
@@ -66,19 +66,68 @@ public class MirrorTest {
     @Test
     public void testSimpleCopy () throws Exception {
         if (!checkEnvs()) return;
-
         final String key = "testSimpleCopy_"+random(10);
+        final String[] args = {OPT_VERBOSE, OPT_PREFIX, key, SOURCE, DESTINATION};
 
-        main = new MirrorMain(new String[]{MirrorOptions.OPT_VERBOSE, MirrorOptions.OPT_PREFIX, key, SOURCE, DESTINATION});
+        testSimpleCopyInternal(key, args);
+    }
+
+    @Test
+    public void testSimpleCopyWithInlinePrefix () throws Exception {
+        if (!checkEnvs()) return;
+        final String key = "testSimpleCopyWithInlinePrefix_"+random(10);
+        final String[] args = {OPT_VERBOSE, SOURCE + "/" + key, DESTINATION};
+
+        testSimpleCopyInternal(key, args);
+    }
+
+    private void testSimpleCopyInternal(String key, String[] args) throws Exception {
+
+        main = new MirrorMain(args);
         main.init();
 
         final TestFile testFile = createTestFile(key, Copy.SOURCE, Clean.SOURCE_AND_DEST);
 
         main.run();
+
         assertEquals(1, main.getContext().getStats().objectsCopied.get());
         assertEquals(testFile.data.length(), main.getContext().getStats().bytesCopied.get());
 
         final ObjectMetadata metadata = main.getClient().getObjectMetadata(DESTINATION, key);
+        assertEquals(testFile.data.length(), metadata.getContentLength());
+    }
+
+    @Test
+    public void testSimpleCopyWithDestPrefix () throws Exception {
+        if (!checkEnvs()) return;
+        final String key = "testCopyWithDestPrefix_"+random(10);
+        final String destKey = "dest_testCopyWithDestPrefix_"+random(10);
+        final String[] args = {OPT_PREFIX, key, OPT_DEST_PREFIX, destKey, SOURCE, DESTINATION};
+        testSimpleCopyWithDestPrefixInternal(key, destKey, args);
+    }
+
+    @Test
+    public void testSimpleCopyWithInlineDestPrefix () throws Exception {
+        if (!checkEnvs()) return;
+        final String key = "testSimpleCopyWithInlineDestPrefix_"+random(10);
+        final String destKey = "dest_testSimpleCopyWithInlineDestPrefix_"+random(10);
+        final String[] args = {SOURCE+"/"+key, DESTINATION+"/"+destKey };
+        testSimpleCopyWithDestPrefixInternal(key, destKey, args);
+    }
+
+    private void testSimpleCopyWithDestPrefixInternal(String key, String destKey, String[] args) throws Exception {
+        main = new MirrorMain(args);
+        main.init();
+
+        final TestFile testFile = createTestFile(key, Copy.SOURCE, Clean.SOURCE);
+        stuffToCleanup.add(new S3Asset(DESTINATION, destKey));
+
+        main.run();
+
+        assertEquals(1, main.getContext().getStats().objectsCopied.get());
+        assertEquals(testFile.data.length(), main.getContext().getStats().bytesCopied.get());
+
+        final ObjectMetadata metadata = main.getClient().getObjectMetadata(DESTINATION, destKey);
         assertEquals(testFile.data.length(), metadata.getContentLength());
     }
 
@@ -88,8 +137,8 @@ public class MirrorTest {
 
         final String key = "testDeleteRemoved_"+random(10);
 
-        main = new MirrorMain(new String[]{MirrorOptions.OPT_VERBOSE, MirrorOptions.OPT_PREFIX, key,
-                                           MirrorOptions.OPT_DELETE_REMOVED, SOURCE, DESTINATION});
+        main = new MirrorMain(new String[]{OPT_VERBOSE, OPT_PREFIX, key,
+                                           OPT_DELETE_REMOVED, SOURCE, DESTINATION});
         main.init();
 
         // Write some files to dest

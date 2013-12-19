@@ -46,4 +46,62 @@ public class MirrorMainTest {
         assertEquals(SOURCE, options.getSource());
         assertEquals(DESTINATION, options.getDestination());
     }
+
+    @Test
+    public void testInlinePrefix () throws Exception {
+        final String prefix = "foo";
+        final MirrorMain main = new MirrorMain(new String[]{SOURCE+"/"+prefix, DESTINATION});
+        main.parseArguments();
+
+        final MirrorOptions options = main.getOptions();
+        assertEquals(prefix, options.getPrefix());
+        assertNull(options.getDestPrefix());
+    }
+
+    @Test
+    public void testInlineDestPrefix () throws Exception {
+        final String destPrefix = "foo";
+        final MirrorMain main = new MirrorMain(new String[]{SOURCE, DESTINATION+"/"+destPrefix});
+        main.parseArguments();
+
+        final MirrorOptions options = main.getOptions();
+        assertEquals(destPrefix, options.getDestPrefix());
+        assertNull(options.getPrefix());
+    }
+
+    @Test
+    public void testInlineSourceAndDestPrefix () throws Exception {
+        final String prefix = "foo";
+        final String destPrefix = "bar";
+        final MirrorMain main = new MirrorMain(new String[]{SOURCE+"/"+prefix, DESTINATION+"/"+destPrefix});
+        main.parseArguments();
+
+        final MirrorOptions options = main.getOptions();
+        assertEquals(prefix, options.getPrefix());
+        assertEquals(destPrefix, options.getDestPrefix());
+    }
+
+    @Test
+    public void testInlineSourcePrefixAndPrefixOption () throws Exception {
+        final String prefix = "foo";
+        final MirrorMain main = new MirrorMain(new String[]{MirrorOptions.OPT_PREFIX, prefix, SOURCE+"/"+prefix, DESTINATION});
+        try {
+            main.parseArguments();
+            fail("expected IllegalArgumentException");
+        } catch (Exception e) {
+            assertTrue(e instanceof IllegalArgumentException);
+        }
+    }
+
+    @Test
+    public void testInlineDestinationPrefixAndPrefixOption () throws Exception {
+        final String prefix = "foo";
+        final MirrorMain main = new MirrorMain(new String[]{MirrorOptions.OPT_DEST_PREFIX, prefix, SOURCE, DESTINATION+"/"+prefix});
+        try {
+            main.parseArguments();
+            fail("expected IllegalArgumentException");
+        } catch (Exception e) {
+            assertTrue(e instanceof IllegalArgumentException);
+        }
+    }
 }

@@ -3,6 +3,7 @@ package org.cobbzilla.s3s3mirror;
 import com.amazonaws.services.s3.AmazonS3Client;
 import lombok.Cleanup;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.math.RandomUtils;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -10,6 +11,8 @@ import java.io.FileOutputStream;
 import java.util.List;
 
 class TestFile {
+
+    public static final int TEST_FILE_SIZE = 1024;
 
     enum Copy  { SOURCE, DEST, SOURCE_AND_DEST }
     enum Clean { SOURCE, DEST, SOURCE_AND_DEST }
@@ -19,7 +22,7 @@ class TestFile {
 
     public TestFile() throws Exception{
         file = File.createTempFile(getClass().getName(), ".tmp");
-        data = MirrorTest.random(MirrorTest.TEST_FILE_SIZE);
+        data = MirrorTest.random(TEST_FILE_SIZE + (RandomUtils.nextInt() % 1024));
         @Cleanup FileOutputStream out = new FileOutputStream(file);
         IOUtils.copy(new ByteArrayInputStream(data.getBytes()), out);
         file.deleteOnExit();

@@ -34,8 +34,7 @@ public class KeyLister implements Runnable {
         this.summaries = new ArrayList<S3ObjectSummary>(10*fetchSize);
 
         final ListObjectsRequest request = new ListObjectsRequest(bucket, prefix, null, null, fetchSize);
-        listing = client.listObjects(request);
-        context.getStats().s3getCount.incrementAndGet();
+        listing = s3getFirstBatch(client, request);
         synchronized (summaries) {
             final List<S3ObjectSummary> objectSummaries = listing.getObjectSummaries();
             summaries.addAll(objectSummaries);
@@ -84,6 +83,29 @@ public class KeyLister implements Runnable {
         }
     }
 
+    private ObjectListing s3getFirstBatch(AmazonS3Client client, ListObjectsRequest request) {
+
+        final MirrorOptions options = context.getOptions();
+        final boolean verbose = options.isVerbose();
+        final int maxRetries = options.getMaxRetries();
+
+        Exception lastException = null;
+        for (int tries=0; tries<maxRetries; tries++) {
+            try {
+                context.getStats().s3getCount.incrementAndGet();
+                ObjectListing listing = client.listObjects(request);
+                if (verbose) log.info("successfully got first batch of objects (on try #"+tries+")");
+                return listing;
+
+            } catch (Exception e) {
+                lastException = e;
+                log.warn("s3getFirstBatch: error listing (try #"+tries+"): "+e);
+                Sleep.sleep(50);
+            }
+        }
+        throw new IllegalStateException("s3getFirstBatch: error listing: "+lastException, lastException);
+    }
+
     private ObjectListing s3getNextBatch() {
         final MirrorOptions options = context.getOptions();
         final boolean verbose = options.isVerbose();
@@ -91,8 +113,8 @@ public class KeyLister implements Runnable {
 
         for (int tries=0; tries<maxRetries; tries++) {
             try {
-                ObjectListing next = client.listNextBatchOfObjects(listing);
                 context.getStats().s3getCount.incrementAndGet();
+                ObjectListing next = client.listNextBatchOfObjects(listing);
                 if (verbose) log.info("successfully got next batch of objects (on try #"+tries+")");
                 return next;
 

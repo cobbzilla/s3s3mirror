@@ -53,8 +53,8 @@ public class KeyCopyJob extends KeyJob {
                 for (int tries=0; tries<maxRetries; tries++) {
                     if (verbose) log.info("copying (try #"+tries+"): "+key+" to: "+keydest);
                     try {
-                        client.copyObject(request);
                         stats.s3copyCount.incrementAndGet();
+                        client.copyObject(request);
                         stats.bytesCopied.addAndGet(sourceMetadata.getContentLength());
                         copiedOK = true;
                         if (verbose) log.info("successfully copied (on try #"+tries+"): "+key+" to: "+keydest);

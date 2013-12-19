@@ -29,9 +29,8 @@ public abstract class KeyJob implements Runnable {
         Exception ex = null;
         for (int tries=0; tries<options.getMaxRetries(); tries++) {
             try {
-                final ObjectMetadata objectMetadata = client.getObjectMetadata(bucket, key);
                 context.getStats().s3getCount.incrementAndGet();
-                return objectMetadata;
+                return client.getObjectMetadata(bucket, key);
 
             } catch (AmazonS3Exception e) {
                 if (e.getStatusCode() == 404) throw e;
@@ -55,9 +54,8 @@ public abstract class KeyJob implements Runnable {
         Exception ex = null;
         for (int tries=0; tries<options.getMaxRetries(); tries++) {
             try {
-                final AccessControlList objectAcl = client.getObjectAcl(options.getSourceBucket(), key);
                 context.getStats().s3getCount.incrementAndGet();
-                return objectAcl;
+                return client.getObjectAcl(options.getSourceBucket(), key);
 
             } catch (Exception e) {
                 ex = e;

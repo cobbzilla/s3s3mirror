@@ -27,7 +27,7 @@ public class MirrorMaster {
 
         final MirrorOptions options = context.getOptions();
 
-        if (options.isVerbose()) log.info("will not copy anything older than "+options.getCtime()+" (cutoff="+options.getMaxAgeDate()+")");
+        if (options.isVerbose() && options.hasCtime()) log.info("will not copy anything older than "+options.getCtime()+" (cutoff="+options.getMaxAgeDate()+")");
 
         final int maxQueueCapacity = getMaxQueueCapacity(options);
         final BlockingQueue<Runnable> workQueue = new LinkedBlockingQueue<Runnable>(maxQueueCapacity);

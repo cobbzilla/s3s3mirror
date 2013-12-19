@@ -110,18 +110,42 @@ public class MirrorOptions implements AWSCredentials {
     @Option(name=OPT_DELETE_REMOVED, aliases=LONGOPT_DELETE_REMOVED, usage=USAGE_DELETE_REMOVED)
     @Getter @Setter private boolean deleteRemoved = false;
 
+    @Argument(index=0, required=true, usage="source bucket[/source/prefix]") @Getter @Setter private String source;
+    @Argument(index=1, required=true, usage="destination bucket[/dest/prefix]") @Getter @Setter private String destination;
+
+    @Getter private String sourceBucket;
+    @Getter private String destinationBucket;
+
     public void initDerivedFields() {
+
         if (hasCtime()) {
             this.maxAge = initMaxAge();
             this.maxAgeDate = new Date(maxAge).toString();
         }
+
+        String scrubbed;
+        int slashPos;
+
+        scrubbed = scrubS3ProtocolPrefix(source);
+        slashPos = scrubbed.indexOf('/');
+        if (slashPos == -1) {
+            sourceBucket = scrubbed;
+        } else {
+            sourceBucket = scrubbed.substring(0, slashPos);
+            if (hasPrefix()) throw new IllegalArgumentException("Cannot use a "+OPT_PREFIX+"/"+LONGOPT_PREFIX+" argument and source path that includes a prefix at the same time");
+            prefix = scrubbed.substring(slashPos+1);
+        }
+
+        scrubbed = scrubS3ProtocolPrefix(destination);
+        slashPos = scrubbed.indexOf('/');
+        if (slashPos == -1) {
+            destinationBucket = scrubbed;
+        } else {
+            destinationBucket = scrubbed.substring(0, slashPos);
+            if (hasDestPrefix()) throw new IllegalArgumentException("Cannot use a "+OPT_DEST_PREFIX+"/"+LONGOPT_DEST_PREFIX+" argument and destination path that includes a dest-prefix at the same time");
+            destPrefix = scrubbed.substring(slashPos+1);
+        }
     }
-
-    @Argument(index=0, required=true, usage="source bucket") @Getter @Setter private String source;
-    @Argument(index=1, required=true, usage="destination bucket") @Getter @Setter private String destination;
-
-    public String getSourceBucket() { return scrubS3ProtocolPrefix(getSource()); }
-    public String getDestinationBucket() { return scrubS3ProtocolPrefix(getDestination()); }
 
     protected String scrubS3ProtocolPrefix(String bucket) {
         bucket = bucket.trim();
@@ -130,5 +154,4 @@ public class MirrorOptions implements AWSCredentials {
         }
         return bucket;
     }
-
 }
