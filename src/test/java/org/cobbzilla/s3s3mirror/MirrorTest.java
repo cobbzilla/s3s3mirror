@@ -54,6 +54,7 @@ public class MirrorTest {
             AmazonS3Client client = main.getClient();
             for (S3Asset asset : stuffToCleanup) {
                 try {
+                    log.info("cleanupS3Assets: deleting "+asset);
                     client.deleteObject(asset.bucket, asset.key);
                 } catch (Exception e) {
                     log.error("Error cleaning up object: "+asset+": "+e.getMessage());
@@ -100,8 +101,8 @@ public class MirrorTest {
     @Test
     public void testSimpleCopyWithDestPrefix () throws Exception {
         if (!checkEnvs()) return;
-        final String key = "testCopyWithDestPrefix_"+random(10);
-        final String destKey = "dest_testCopyWithDestPrefix_"+random(10);
+        final String key = "testSimpleCopyWithDestPrefix_"+random(10);
+        final String destKey = "dest_testSimpleCopyWithDestPrefix_"+random(10);
         final String[] args = {OPT_PREFIX, key, OPT_DEST_PREFIX, destKey, SOURCE, DESTINATION};
         testSimpleCopyWithDestPrefixInternal(key, destKey, args);
     }
