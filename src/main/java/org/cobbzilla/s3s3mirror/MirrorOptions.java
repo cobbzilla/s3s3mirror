@@ -93,7 +93,7 @@ public class MirrorOptions implements AWSCredentials {
         // all digits -- assume "days"
         if (ctime.matches("^[0-9]+$")) return dateTime.minusDays(Integer.parseInt(ctime)).getMillis();
 
-        // ensure there is at leaste one digit, and exactly one character suffix, and the char is a legal option
+        // ensure there is at least one digit, and exactly one character suffix, and the suffix is a legal option
         if (!ctime.matches("^[0-9]+[yMwdhms]$")) throw new IllegalArgumentException("Invalid option for ctime: "+ctime);
 
         if (ctime.endsWith("y")) return dateTime.minusYears(getCtimeNumber(ctime)).getMillis();
