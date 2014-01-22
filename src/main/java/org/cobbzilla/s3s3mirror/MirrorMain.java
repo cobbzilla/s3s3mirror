@@ -67,7 +67,9 @@ public class MirrorMain {
     }
 
     protected AmazonS3Client getAmazonS3Client() {
-        return new AmazonS3Client(options, new ClientConfiguration().withProtocol(Protocol.HTTP).withMaxConnections(options.getMaxConnections()));
+        AmazonS3Client client = new AmazonS3Client(options, new ClientConfiguration().withProtocol(Protocol.HTTP).withMaxConnections(options.getMaxConnections()));
+        if (options.hasEndpoint()) client.setEndpoint(options.getEndpoint());
+        return client;
     }
 
     protected void parseArguments() throws Exception {

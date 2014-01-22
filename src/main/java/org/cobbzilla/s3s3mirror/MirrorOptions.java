@@ -44,11 +44,21 @@ public class MirrorOptions implements AWSCredentials {
     public static final String USAGE_DEST_PREFIX = "Destination prefix (replacing the one specified in --prefix, if any)";
     public static final String OPT_DEST_PREFIX= "-d";
     public static final String LONGOPT_DEST_PREFIX = "--dest-prefix";
-    @Option(name=OPT_DEST_PREFIX, aliases=LONGOPT_DEST_PREFIX, usage= USAGE_DEST_PREFIX)
+    @Option(name=OPT_DEST_PREFIX, aliases=LONGOPT_DEST_PREFIX, usage=USAGE_DEST_PREFIX)
     @Getter @Setter private String destPrefix = null;
 
     public boolean hasDestPrefix() { return destPrefix != null && destPrefix.length() > 0; }
     public int getDestPrefixLength () { return destPrefix == null ? 0 : destPrefix.length(); }
+
+    public static final String AWS_ENDPOINT = "AWS_ENDPOINT";
+
+    public static final String USAGE_ENDPOINT = "AWS endpoint to use (or set "+AWS_ENDPOINT+" in your environment)";
+    public static final String OPT_ENDPOINT = "-e";
+    public static final String LONGOPT_ENDPOINT = "--endpoint";
+    @Option(name=OPT_ENDPOINT, aliases=LONGOPT_ENDPOINT, usage=USAGE_ENDPOINT)
+    @Getter @Setter private String endpoint = System.getenv().get(AWS_ENDPOINT);
+
+    public boolean hasEndpoint () { return endpoint != null && endpoint.trim().length() > 0; }
 
     public static final String USAGE_MAX_CONNECTIONS = "Maximum number of connections to S3 (default 100)";
     public static final String OPT_MAX_CONNECTIONS = "-m";
