@@ -10,7 +10,7 @@ public class MirrorMainTest {
     public static final String DESTINATION = "s3://to-bucket";
 
     @Test
-    public void testBasicArgs () throws Exception {
+    public void testBasicArgs() throws Exception {
 
         final MirrorMain main = new MirrorMain(new String[]{SOURCE, DESTINATION});
         main.parseArguments();
@@ -22,7 +22,7 @@ public class MirrorMainTest {
     }
 
     @Test
-    public void testDryRunArgs () throws Exception {
+    public void testDryRunArgs() throws Exception {
 
         final MirrorMain main = new MirrorMain(new String[]{MirrorOptions.OPT_DRY_RUN, SOURCE, DESTINATION});
         main.parseArguments();
@@ -34,7 +34,7 @@ public class MirrorMainTest {
     }
 
     @Test
-    public void testMaxConnectionsArgs () throws Exception {
+    public void testMaxConnectionsArgs() throws Exception {
 
         int maxConns = 42;
         final MirrorMain main = new MirrorMain(new String[]{MirrorOptions.OPT_MAX_CONNECTIONS, String.valueOf(maxConns), SOURCE, DESTINATION});
@@ -48,9 +48,9 @@ public class MirrorMainTest {
     }
 
     @Test
-    public void testInlinePrefix () throws Exception {
+    public void testInlinePrefix() throws Exception {
         final String prefix = "foo";
-        final MirrorMain main = new MirrorMain(new String[]{SOURCE+"/"+prefix, DESTINATION});
+        final MirrorMain main = new MirrorMain(new String[]{SOURCE + "/" + prefix, DESTINATION});
         main.parseArguments();
 
         final MirrorOptions options = main.getOptions();
@@ -59,9 +59,9 @@ public class MirrorMainTest {
     }
 
     @Test
-    public void testInlineDestPrefix () throws Exception {
+    public void testInlineDestPrefix() throws Exception {
         final String destPrefix = "foo";
-        final MirrorMain main = new MirrorMain(new String[]{SOURCE, DESTINATION+"/"+destPrefix});
+        final MirrorMain main = new MirrorMain(new String[]{SOURCE, DESTINATION + "/" + destPrefix});
         main.parseArguments();
 
         final MirrorOptions options = main.getOptions();
@@ -70,10 +70,10 @@ public class MirrorMainTest {
     }
 
     @Test
-    public void testInlineSourceAndDestPrefix () throws Exception {
+    public void testInlineSourceAndDestPrefix() throws Exception {
         final String prefix = "foo";
         final String destPrefix = "bar";
-        final MirrorMain main = new MirrorMain(new String[]{SOURCE+"/"+prefix, DESTINATION+"/"+destPrefix});
+        final MirrorMain main = new MirrorMain(new String[]{SOURCE + "/" + prefix, DESTINATION + "/" + destPrefix});
         main.parseArguments();
 
         final MirrorOptions options = main.getOptions();
@@ -82,9 +82,9 @@ public class MirrorMainTest {
     }
 
     @Test
-    public void testInlineSourcePrefixAndPrefixOption () throws Exception {
+    public void testInlineSourcePrefixAndPrefixOption() throws Exception {
         final String prefix = "foo";
-        final MirrorMain main = new MirrorMain(new String[]{MirrorOptions.OPT_PREFIX, prefix, SOURCE+"/"+prefix, DESTINATION});
+        final MirrorMain main = new MirrorMain(new String[]{MirrorOptions.OPT_PREFIX, prefix, SOURCE + "/" + prefix, DESTINATION});
         try {
             main.parseArguments();
             fail("expected IllegalArgumentException");
@@ -94,14 +94,31 @@ public class MirrorMainTest {
     }
 
     @Test
-    public void testInlineDestinationPrefixAndPrefixOption () throws Exception {
+    public void testInlineDestinationPrefixAndPrefixOption() throws Exception {
         final String prefix = "foo";
-        final MirrorMain main = new MirrorMain(new String[]{MirrorOptions.OPT_DEST_PREFIX, prefix, SOURCE, DESTINATION+"/"+prefix});
+        final MirrorMain main = new MirrorMain(new String[]{MirrorOptions.OPT_DEST_PREFIX, prefix, SOURCE, DESTINATION + "/" + prefix});
         try {
             main.parseArguments();
             fail("expected IllegalArgumentException");
         } catch (Exception e) {
             assertTrue(e instanceof IllegalArgumentException);
         }
+    }
+
+    /**
+     * When access keys are read from environment then the --proxy setting is valid.
+     * If access keys are ready from s3cfg file then proxy settings are picked from there.
+     * @throws Exception
+     */
+    @Test
+    public void testProxyHostAndProxyPortOption() throws Exception {
+        final String proxy = "localhost:8080";
+        final MirrorMain main = new MirrorMain(new String[]{MirrorOptions.OPT_PROXY, proxy, SOURCE, DESTINATION});
+
+        main.getOptions().setAWSAccessKeyId("accessKey");
+        main.getOptions().setAWSSecretKey("secretKey");
+        main.parseArguments();
+        assertEquals("localhost", main.getOptions().getProxyHost());
+        assertEquals(8080, main.getOptions().getProxyPort());
     }
 }

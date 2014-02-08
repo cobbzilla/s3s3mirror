@@ -67,7 +67,11 @@ public class MirrorMain {
     }
 
     protected AmazonS3Client getAmazonS3Client() {
-        AmazonS3Client client = new AmazonS3Client(options, new ClientConfiguration().withProtocol(Protocol.HTTP).withMaxConnections(options.getMaxConnections()));
+        ClientConfiguration clientConfiguration = new ClientConfiguration().withProtocol(Protocol.HTTP)
+                .withMaxConnections(options.getMaxConnections())
+                .withProxyHost(options.getProxyHost())
+                .withProxyPort(options.getProxyPort());
+        AmazonS3Client client = new AmazonS3Client(options, clientConfiguration);
         if (options.hasEndpoint()) client.setEndpoint(options.getEndpoint());
         return client;
     }
@@ -83,6 +87,10 @@ public class MirrorMain {
                     options.setAWSAccessKeyId(line.substring(line.indexOf("=") + 1).trim());
                 } else if (line.trim().startsWith("secret_key")) {
                     options.setAWSSecretKey(line.substring(line.indexOf("=") + 1).trim());
+                } else if (line.trim().startsWith("proxy_host")) {
+                    options.setProxyHost(line.substring(line.indexOf("=") + 1).trim());
+                } else if (line.trim().startsWith("proxy_port")){
+                    options.setProxyPort(Integer.parseInt(line.substring(line.indexOf("=") + 1).trim()));
                 }
             }
         }
