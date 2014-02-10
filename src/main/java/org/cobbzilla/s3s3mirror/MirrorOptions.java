@@ -89,9 +89,10 @@ public class MirrorOptions implements AWSCredentials {
     private static final String PROXY_USAGE = "IP or address of proxy as proxy_host and the port on which proxy accepts requests" +
             " as proxy_port with option provided as => (proxy_host):(proxy_port). Defaults to no proxy. They will be over written" +
             " if proxy settings are also defined in ~/.s3cfg";
-    public static final String OPT_PROXY = "--proxy";
+    public static final String OPT_PROXY = "-p";
+    public static final String LONGOPT_PROXY = "--proxy";
 
-    @Option(name = OPT_PROXY, usage = PROXY_USAGE)
+    @Option(name=OPT_PROXY, aliases=LONGOPT_PROXY, usage=PROXY_USAGE)
     public void setProxy(String proxy) {
         String[] splits = proxy.split(":");
         this.proxyHost = splits[0];
