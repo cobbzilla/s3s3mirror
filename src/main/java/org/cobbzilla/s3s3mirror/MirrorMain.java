@@ -90,9 +90,9 @@ public class MirrorMain {
                     options.setAWSAccessKeyId(line.substring(line.indexOf("=") + 1).trim());
                 } else if (line.trim().startsWith("secret_key")) {
                     options.setAWSSecretKey(line.substring(line.indexOf("=") + 1).trim());
-                } else if (line.trim().startsWith("proxy_host")) {
+                } else if (!options.getHasProxy() && line.trim().startsWith("proxy_host")) {
                     options.setProxyHost(line.substring(line.indexOf("=") + 1).trim());
-                } else if (line.trim().startsWith("proxy_port")){
+                } else if (!options.getHasProxy() && line.trim().startsWith("proxy_port")){
                     options.setProxyPort(Integer.parseInt(line.substring(line.indexOf("=") + 1).trim()));
                 }
             }
