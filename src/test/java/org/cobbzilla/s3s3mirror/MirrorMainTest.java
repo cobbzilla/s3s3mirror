@@ -121,4 +121,21 @@ public class MirrorMainTest {
         assertEquals("localhost", main.getOptions().getProxyHost());
         assertEquals(8080, main.getOptions().getProxyPort());
     }
+
+    @Test
+    public void testInvalidProxyOption () throws Exception {
+        for (String proxy : new String[] {"localhost", "localhost:", ":1234", "localhost:invalid", ":", ""} ) {
+            testInvalidProxySetting(proxy);
+        }
+    }
+
+    private void testInvalidProxySetting(String proxy) throws Exception {
+        final MirrorMain main = new MirrorMain(new String[]{MirrorOptions.OPT_PROXY, proxy, SOURCE, DESTINATION});
+        main.getOptions().setAWSAccessKeyId("accessKey");
+        main.getOptions().setAWSSecretKey("secretKey");
+        try {
+            main.parseArguments();
+            fail("Invalid proxy setting ("+proxy+") should have thrown exception");
+        } catch (IllegalArgumentException expected) {}
+    }
 }

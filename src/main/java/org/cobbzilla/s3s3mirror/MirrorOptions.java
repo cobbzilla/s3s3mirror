@@ -89,17 +89,30 @@ public class MirrorOptions implements AWSCredentials {
     private static final String PROXY_USAGE = "IP or address of proxy as proxy_host and the port on which proxy accepts requests" +
             " as proxy_port with option provided as => (proxy_host):(proxy_port). Defaults to no proxy. They will be over written" +
             " if proxy settings are also defined in ~/.s3cfg";
-    public static final String OPT_PROXY = "-p";
+    public static final String OPT_PROXY = "-z";
     public static final String LONGOPT_PROXY = "--proxy";
 
     @Option(name=OPT_PROXY, aliases=LONGOPT_PROXY, usage=PROXY_USAGE)
     public void setProxy(String proxy) {
-        String[] splits = proxy.split(":");
-        this.proxyHost = splits[0];
-        this.proxyPort = Integer.parseInt(splits[1]);
+        final String[] splits = proxy.split(":");
+        if (splits.length != 2) {
+            throw new IllegalArgumentException("Invalid proxy setting ("+proxy+"), please use host:port");
+        }
+
+        proxyHost = splits[0];
+        if (proxyHost.trim().length() == 0) {
+            throw new IllegalArgumentException("Invalid proxy setting ("+proxy+"), please use host:port");
+        }
+        try {
+            proxyPort = Integer.parseInt(splits[1]);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Invalid proxy setting ("+proxy+"), port could not be parsed as a number");
+        }
     }
     @Getter @Setter public String proxyHost = null;
     @Getter @Setter public int proxyPort = -1;
+
+    public boolean getHasProxy() { return proxyHost != null && proxyHost.trim().length() > 0; }
 
     private long initMaxAge() {
 
@@ -179,4 +192,5 @@ public class MirrorOptions implements AWSCredentials {
         }
         return bucket;
     }
+
 }

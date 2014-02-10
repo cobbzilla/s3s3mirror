@@ -68,9 +68,12 @@ public class MirrorMain {
 
     protected AmazonS3Client getAmazonS3Client() {
         ClientConfiguration clientConfiguration = new ClientConfiguration().withProtocol(Protocol.HTTP)
-                .withMaxConnections(options.getMaxConnections())
-                .withProxyHost(options.getProxyHost())
-                .withProxyPort(options.getProxyPort());
+                .withMaxConnections(options.getMaxConnections());
+        if (options.getHasProxy()) {
+            clientConfiguration = clientConfiguration
+                    .withProxyHost(options.getProxyHost())
+                    .withProxyPort(options.getProxyPort());
+        }
         AmazonS3Client client = new AmazonS3Client(options, clientConfiguration);
         if (options.hasEndpoint()) client.setEndpoint(options.getEndpoint());
         return client;
