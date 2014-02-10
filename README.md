@@ -56,7 +56,7 @@ The above command requires that Maven 3 is installed.
     -X (--delete-removed)    : Delete objects from the destination bucket if they do not exist in the source bucket
     -t (--max-threads) N     : Maximum number of threads (default 100)
     -v (--verbose)           : Verbose output (default false)
-    -p (--proxy) VAL         : IP or address of proxy as proxy_host and the port on which proxy accepts requests as
+    -z (--proxy) VAL         : IP or address of proxy as proxy_host and the port on which proxy accepts requests as
                                proxy_port with option provided as => (proxy_host):(proxy_port). Defaults to no proxy.
                                They will be over written if proxy settings are also defined in ~/.s3cfg
 
