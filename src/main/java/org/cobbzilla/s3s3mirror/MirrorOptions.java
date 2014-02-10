@@ -140,6 +140,18 @@ public class MirrorOptions implements AWSCredentials {
     @Getter private String sourceBucket;
     @Getter private String destinationBucket;
 
+    /**
+     * Current max file size allowed in amazon is 5 GB. We can try and provide this as an option too.
+     */
+    public static final long MAX_SINGLE_REQUEST_UPLOAD_FILE_SIZE = 5 * 1024 * 1204 * 1024l;
+    private static final long DEFAULT_PART_SIZE = 4 * 1024 * 1204 * 1024l;
+    private static final String MULTI_PART_UPLOAD_SIZE_USAGE = "This specifies the upload size in bytes of each part uploaded as part of a multipart request" +
+            " for files that are greater than the max allowed file size of " + MAX_SINGLE_REQUEST_UPLOAD_FILE_SIZE + " bytes. Defaults to " + DEFAULT_PART_SIZE + " bytes.";
+    private static final String OPT_MULTI_PART_UPLOAD_SIZE = "--upload.part.size";
+    @Option(name = OPT_MULTI_PART_UPLOAD_SIZE, usage = MULTI_PART_UPLOAD_SIZE_USAGE)
+    @Getter @Setter private long uploadPartSize = DEFAULT_PART_SIZE;
+
+
     public void initDerivedFields() {
 
         if (hasCtime()) {
