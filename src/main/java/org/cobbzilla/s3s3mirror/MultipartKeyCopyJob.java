@@ -22,7 +22,9 @@ public class MultipartKeyCopyJob extends KeyCopyJob {
         int maxPartRetries = options.getMaxRetries();
         String targetBucketName = options.getDestinationBucket();
         List<CopyPartResult> copyResponses = new ArrayList<CopyPartResult>();
-        if (options.isVerbose()) log.info("Initiating multipart upload request for " + summary.getKey());
+        if (options.isVerbose()) {
+            log.info("Initiating multipart upload request for " + summary.getKey());
+        }
         InitiateMultipartUploadRequest initiateRequest = new InitiateMultipartUploadRequest(targetBucketName, keydest)
                 .withAccessControlList(objectAcl)
                 .withObjectMetadata(sourceMetadata);
@@ -34,7 +36,10 @@ public class MultipartKeyCopyJob extends KeyCopyJob {
 
         for (int i = 1; bytePosition < objectSize; i++) {
             long lastByte = bytePosition + partSize - 1 >= objectSize ? objectSize - 1 : bytePosition + partSize - 1;
-            if (options.isVerbose()) log.info("copying : " + bytePosition + " to " + lastByte);
+            String infoMessage = "copying : " + bytePosition + " to " + lastByte;
+            if (options.isVerbose()) {
+                log.info(infoMessage);
+            }
             CopyPartRequest copyRequest = new CopyPartRequest()
                     .withDestinationBucketName(targetBucketName)
                     .withDestinationKey(keydest)
@@ -47,10 +52,11 @@ public class MultipartKeyCopyJob extends KeyCopyJob {
 
             for (int tries = 1; tries <= maxPartRetries; tries++) {
                 try {
-                    log.info("try :" + tries);
+                    if (options.isVerbose()) log.info("try :" + tries);
                     context.getStats().s3copyCount.incrementAndGet();
                     CopyPartResult copyPartResult = client.copyPart(copyRequest);
                     copyResponses.add(copyPartResult);
+                    if (options.isVerbose()) log.info("completed " + infoMessage);
                     break;
                 } catch (Exception e) {
                     if (tries == maxPartRetries) {
@@ -66,6 +72,9 @@ public class MultipartKeyCopyJob extends KeyCopyJob {
         CompleteMultipartUploadRequest completeRequest = new CompleteMultipartUploadRequest(targetBucketName, keydest,
                 initResult.getUploadId(), getETags(copyResponses));
         client.completeMultipartUpload(completeRequest);
+        if(options.isVerbose()) {
+            log.info("completed multipart request for : " + summary.getKey());
+        }
         context.getStats().bytesCopied.addAndGet(objectSize);
         return true;
     }
