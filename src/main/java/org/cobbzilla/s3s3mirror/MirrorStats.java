@@ -6,6 +6,8 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
+import static org.cobbzilla.s3s3mirror.MirrorConstants.*;
+
 @Slf4j
 public class MirrorStats {
 
@@ -56,12 +58,6 @@ public class MirrorStats {
                 + "COPY operations: "+ s3copyCount+"\n"
                 + "DELETE operations: "+ s3deleteCount+"\n";
     }
-
-    public static final long KB = 1024;
-    public static final long MB = KB * 1024;
-    public static final long GB = MB * 1024;
-    public static final long PB = GB * 1024;
-    public static final long EB = PB * 1024;
 
     private String formatBytes(long bytesCopied) {
         if (bytesCopied > EB) return ((double) bytesCopied) / ((double) EB) + " EB ("+bytesCopied+" bytes)";

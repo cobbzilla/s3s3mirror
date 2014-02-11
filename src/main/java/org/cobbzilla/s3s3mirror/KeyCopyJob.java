@@ -13,7 +13,7 @@ import java.util.Date;
 @Slf4j
 public class KeyCopyJob extends KeyJob {
 
-    String keydest;
+    protected String keydest;
 
     public KeyCopyJob(AmazonS3Client client, MirrorContext context, S3ObjectSummary summary, Object notifyLock) {
         super(client, context, summary, notifyLock);
@@ -76,8 +76,7 @@ public class KeyCopyJob extends KeyJob {
                 stats.s3copyCount.incrementAndGet();
                 client.copyObject(request);
                 stats.bytesCopied.addAndGet(sourceMetadata.getContentLength());
-                if (verbose)
-                    log.info("successfully copied (on try #" + tries + "): " + key + " to: " + keydest);
+                if (verbose) log.info("successfully copied (on try #" + tries + "): " + key + " to: " + keydest);
                 return true;
             } catch (AmazonS3Exception s3e) {
                 log.error("s3 exception copying (try #" + tries + ") " + key + " to: " + keydest + ": " + s3e);
