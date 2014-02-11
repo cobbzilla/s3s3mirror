@@ -151,6 +151,12 @@ public class MirrorOptions implements AWSCredentials {
     @Option(name = OPT_MULTI_PART_UPLOAD_SIZE, usage = MULTI_PART_UPLOAD_SIZE_USAGE)
     @Getter @Setter private long uploadPartSize = DEFAULT_PART_SIZE;
 
+    private static final String CROSS_ACCOUNT_USAGE ="This specifies if the copy is cross AWS accounts. We only support the use of Resource based policy as" +
+            " specified by AWS documentation to set up cross account copy. By default this is false as you will mostly copy within same account different" +
+            " buckets. If used we give full access to owner of the destination bucket.";
+    private static final String OPT_CROSS_ACCOUNT_COPY = "--cross-account-copy";
+    @Option(name = OPT_CROSS_ACCOUNT_COPY, usage = CROSS_ACCOUNT_USAGE)
+    @Getter @Setter private boolean crossAccountCopy = false;
 
     public void initDerivedFields() {
 

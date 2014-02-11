@@ -26,8 +26,13 @@ public class MultipartKeyCopyJob extends KeyCopyJob {
             log.info("Initiating multipart upload request for " + summary.getKey());
         }
         InitiateMultipartUploadRequest initiateRequest = new InitiateMultipartUploadRequest(targetBucketName, keydest)
-                .withAccessControlList(objectAcl)
                 .withObjectMetadata(sourceMetadata);
+
+        if (options.isCrossAccountCopy()) {
+            initiateRequest.withCannedACL(CannedAccessControlList.BucketOwnerFullControl);
+        } else {
+            initiateRequest.withAccessControlList(objectAcl);
+        }
 
         InitiateMultipartUploadResult initResult = client.initiateMultipartUpload(initiateRequest);
 

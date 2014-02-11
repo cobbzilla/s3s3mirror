@@ -67,7 +67,11 @@ public class KeyCopyJob extends KeyJob {
             if (verbose) log.info("copying (try #" + tries + "): " + key + " to: " + keydest);
             final CopyObjectRequest request = new CopyObjectRequest(options.getSourceBucket(), key, options.getDestinationBucket(), keydest);
             request.setNewObjectMetadata(sourceMetadata);
-            request.setAccessControlList(objectAcl);
+            if (options.isCrossAccountCopy()) {
+                request.setCannedAccessControlList(CannedAccessControlList.BucketOwnerFullControl);
+            } else {
+                request.setAccessControlList(objectAcl);
+            }
             try {
                 stats.s3copyCount.incrementAndGet();
                 client.copyObject(request);
