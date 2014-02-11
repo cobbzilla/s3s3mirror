@@ -153,6 +153,24 @@ public class MirrorOptions implements AWSCredentials {
     @Getter private String sourceBucket;
     @Getter private String destinationBucket;
 
+    /**
+     * Current max file size allowed in amazon is 5 GB. We can try and provide this as an option too.
+     */
+    public static final long MAX_SINGLE_REQUEST_UPLOAD_FILE_SIZE = 5 * 1024 * 1204 * 1024l;
+    private static final long DEFAULT_PART_SIZE = 4 * 1024 * 1204 * 1024l;
+    private static final String MULTI_PART_UPLOAD_SIZE_USAGE = "This specifies the upload size in bytes of each part uploaded as part of a multipart request" +
+            " for files that are greater than the max allowed file size of " + MAX_SINGLE_REQUEST_UPLOAD_FILE_SIZE + " bytes. Defaults to " + DEFAULT_PART_SIZE + " bytes.";
+    private static final String OPT_MULTI_PART_UPLOAD_SIZE = "--upload.part.size";
+    @Option(name = OPT_MULTI_PART_UPLOAD_SIZE, usage = MULTI_PART_UPLOAD_SIZE_USAGE)
+    @Getter @Setter private long uploadPartSize = DEFAULT_PART_SIZE;
+
+    private static final String CROSS_ACCOUNT_USAGE ="This specifies if the copy is cross AWS accounts. We only support the use of Resource based policy as" +
+            " specified by AWS documentation to set up cross account copy. By default this is false as you will mostly copy within same account different" +
+            " buckets. If used we give full access to owner of the destination bucket.";
+    private static final String OPT_CROSS_ACCOUNT_COPY = "--cross-account-copy";
+    @Option(name = OPT_CROSS_ACCOUNT_COPY, usage = CROSS_ACCOUNT_USAGE)
+    @Getter @Setter private boolean crossAccountCopy = false;
+
     public void initDerivedFields() {
 
         if (hasCtime()) {
