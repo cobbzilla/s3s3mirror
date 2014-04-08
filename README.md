@@ -74,7 +74,7 @@ Copy everything from a bucket named "source" to another bucket named "dest"
 
     s3s3mirror.sh source dest
 
-Copy everything from "source" to "dest", but only copy objects created within the past week
+Copy everything from "source" to "dest", but only copy objects created or modified within the past week
 
     s3s3mirror.sh -c 7 source dest
     s3s3mirror.sh -c 7d source dest
