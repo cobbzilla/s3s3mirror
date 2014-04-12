@@ -100,7 +100,10 @@ public class KeyLister implements Runnable {
             } catch (Exception e) {
                 lastException = e;
                 log.warn("s3getFirstBatch: error listing (try #"+tries+"): "+e);
-                Sleep.sleep(50);
+                if (Sleep.sleep(50)) {
+                    log.info("s3getFirstBatch: interrupted while waiting for next try");
+                    break;
+                }
             }
         }
         throw new IllegalStateException("s3getFirstBatch: error listing: "+lastException, lastException);
@@ -124,10 +127,8 @@ public class KeyLister implements Runnable {
             } catch (Exception e) {
                 log.error("unexpected exception listing objects (try #"+tries+"): "+e);
             }
-            try {
-                Thread.sleep(10);
-            } catch (InterruptedException e) {
-                log.error("interrupted while waiting to retry listing objects");
+            if (Sleep.sleep(50)) {
+                log.info("s3getNextBatch: interrupted while waiting for next try");
                 break;
             }
         }
