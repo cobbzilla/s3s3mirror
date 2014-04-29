@@ -3,6 +3,7 @@ package org.cobbzilla.s3s3mirror;
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.Protocol;
 import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.auth.InstanceProfileCredentialsProvider;
 import lombok.Cleanup;
 import lombok.Getter;
 import lombok.Setter;
@@ -74,7 +75,12 @@ public class MirrorMain {
                     .withProxyHost(options.getProxyHost())
                     .withProxyPort(options.getProxyPort());
         }
-        AmazonS3Client client = new AmazonS3Client(options, clientConfiguration);
+        AmazonS3Client client = null;
+        if (options.hasAwsKeys()) {
+            client = new AmazonS3Client(options, clientConfiguration);
+        } else {
+            client = new AmazonS3Client(new InstanceProfileCredentialsProvider(), clientConfiguration);
+        }    
         if (options.hasEndpoint()) client.setEndpoint(options.getEndpoint());
         return client;
     }
@@ -83,23 +89,27 @@ public class MirrorMain {
         parser.parseArgument(args);
         if (!options.hasAwsKeys()) {
             // try to load from ~/.s3cfg
-            @Cleanup BufferedReader reader = new BufferedReader(new FileReader(System.getProperty("user.home")+File.separator+".s3cfg"));
-            String line;
-            while ((line = reader.readLine()) != null) {
-                if (line.trim().startsWith("access_key")) {
-                    options.setAWSAccessKeyId(line.substring(line.indexOf("=") + 1).trim());
-                } else if (line.trim().startsWith("secret_key")) {
-                    options.setAWSSecretKey(line.substring(line.indexOf("=") + 1).trim());
-                } else if (!options.getHasProxy() && line.trim().startsWith("proxy_host")) {
-                    options.setProxyHost(line.substring(line.indexOf("=") + 1).trim());
-                } else if (!options.getHasProxy() && line.trim().startsWith("proxy_port")){
-                    options.setProxyPort(Integer.parseInt(line.substring(line.indexOf("=") + 1).trim()));
+            File s3cfg = new File(System.getProperty("user.home")+File.separator+".s3cfg");
+            if (s3cfg.exists()) {
+                @Cleanup BufferedReader reader = new BufferedReader(new FileReader(s3cfg));
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    if (line.trim().startsWith("access_key")) {
+                        options.setAWSAccessKeyId(line.substring(line.indexOf("=") + 1).trim());
+                    } else if (line.trim().startsWith("secret_key")) {
+                        options.setAWSSecretKey(line.substring(line.indexOf("=") + 1).trim());
+                    } else if (!options.getHasProxy() && line.trim().startsWith("proxy_host")) {
+                        options.setProxyHost(line.substring(line.indexOf("=") + 1).trim());
+                    } else if (!options.getHasProxy() && line.trim().startsWith("proxy_port")){
+                        options.setProxyPort(Integer.parseInt(line.substring(line.indexOf("=") + 1).trim()));
+                    }
                 }
             }
         }
+        /*
         if (!options.hasAwsKeys()) {
             throw new IllegalStateException("ENV vars not defined: " + MirrorOptions.AWS_ACCESS_KEY + " and/or " + MirrorOptions.AWS_SECRET_KEY);
-        }
+        }*/
         options.initDerivedFields();
     }
 
