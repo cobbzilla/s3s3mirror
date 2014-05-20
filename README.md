@@ -104,3 +104,4 @@ BAD IDEA: If copying within a single bucket, do *not* put the destination below 
     s3s3mirror.sh -p foo -d foo/subfolder source source
 *This might cause recursion and raise your AWS bill unnecessarily*
 
+###### If you've enjoyed using s3s3mirror and are looking for a warm-fuzzy feeling, consider dropping a little somethin' into my [tip jar](https://www.gittip.com/cobbzilla)
