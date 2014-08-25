@@ -62,6 +62,7 @@ public class MirrorStats {
     private String formatBytes(long bytesCopied) {
         if (bytesCopied > EB) return ((double) bytesCopied) / ((double) EB) + " EB ("+bytesCopied+" bytes)";
         if (bytesCopied > PB) return ((double) bytesCopied) / ((double) PB) + " PB ("+bytesCopied+" bytes)";
+        if (bytesCopied > TB) return ((double) bytesCopied) / ((double) TB) + " TB ("+bytesCopied+" bytes)";
         if (bytesCopied > GB) return ((double) bytesCopied) / ((double) GB) + " GB ("+bytesCopied+" bytes)";
         if (bytesCopied > MB) return ((double) bytesCopied) / ((double) MB) + " MB ("+bytesCopied+" bytes)";
         if (bytesCopied > KB) return ((double) bytesCopied) / ((double) KB) + " KB ("+bytesCopied+" bytes)";
