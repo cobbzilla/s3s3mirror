@@ -113,7 +113,12 @@ public class MirrorOptions implements AWSCredentials {
     @Getter @Setter public String proxyHost = null;
     @Getter @Setter public int proxyPort = -1;
 
-    public boolean getHasProxy() { return proxyHost != null && proxyHost.trim().length() > 0; }
+    public boolean getHasProxy() {
+        boolean hasProxyHost = proxyHost != null && proxyHost.trim().length() > 0;
+        boolean hasProxyPort = proxyPort != -1;
+
+        return hasProxyHost && hasProxyPort;
+    }
 
     private long initMaxAge() {
 
