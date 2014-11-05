@@ -33,6 +33,12 @@ public class MirrorOptions implements AWSCredentials {
     public static final String LONGOPT_VERBOSE = "--verbose";
     @Option(name=OPT_VERBOSE, aliases=LONGOPT_VERBOSE, usage=USAGE_VERBOSE)
     @Getter @Setter private boolean verbose = false;
+    
+    public static final String USAGE_SSL = "Use SSL for all S3 api operations";
+    public static final String OPT_SSL = "-s";
+    public static final String LONGOPT_SSL = "--ssl";
+    @Option(name=OPT_SSL, aliases=LONGOPT_SSL, usage=USAGE_SSL)
+    @Getter @Setter private boolean ssl = false;
 
     public static final String USAGE_PREFIX = "Only copy objects whose keys start with this prefix";
     public static final String OPT_PREFIX = "-p";
