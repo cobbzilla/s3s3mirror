@@ -43,14 +43,14 @@ public class MirrorOptions implements AWSCredentials {
     @Getter @Setter private boolean ssl = false;
     
     public static final String USAGE_ENCRYPT = "Enable AWS managed server-side encryption";
-    public static final String OPT_ENCRYPT = "-h";
-    public static final String LONGOPT_ENCRYPT = "--encrypt";
+    public static final String OPT_ENCRYPT = "-E";
+    public static final String LONGOPT_ENCRYPT = "--server-side-encryption";
     @Option(name=OPT_ENCRYPT, aliases=LONGOPT_ENCRYPT, usage=USAGE_ENCRYPT)
     @Getter @Setter private boolean encrypt = false;
     
     public static final String USAGE_STORAGE_CLASS = "Specify the S3 StorageClass (Standard | ReducedRedundancy)";
     public static final String OPT_STORAGE_CLASS = "-l";
-    public static final String LONGOPT_STORAGE_CLASS = "--storageclass";
+    public static final String LONGOPT_STORAGE_CLASS = "--storage-class";
     @Option(name=OPT_STORAGE_CLASS, aliases=LONGOPT_STORAGE_CLASS, usage=USAGE_STORAGE_CLASS)
     @Getter @Setter private String storageClass = "Standard"; 
 
