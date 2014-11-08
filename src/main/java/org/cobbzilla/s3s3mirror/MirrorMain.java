@@ -67,7 +67,7 @@ public class MirrorMain {
     }
 
     protected AmazonS3Client getAmazonS3Client() {
-        ClientConfiguration clientConfiguration = new ClientConfiguration().withProtocol(Protocol.HTTP)
+        ClientConfiguration clientConfiguration = new ClientConfiguration().withProtocol((options.isSsl() ? Protocol.HTTPS : Protocol.HTTP))
                 .withMaxConnections(options.getMaxConnections());
         if (options.getHasProxy()) {
             clientConfiguration = clientConfiguration

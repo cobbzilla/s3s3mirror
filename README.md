@@ -66,6 +66,10 @@ The above command requires that Maven 3 is installed.
                                 specified by AWS documentation) for cross account copying
                                 Default is false (copying within same account, preserving ACLs across copies)
                                 If this option is active, the owner of the destination bucket will receive full control
+                                
+    -s (--ssl)                    : Use SSL for all S3 api operations (default false)
+    -E (--server-side-encryption) : Enable AWS managed server-side encryption (default false)
+    -l (--storage-class)		  : S3 storage class "Standard" or "ReducedRedundancy" (default Standard)
 
 
 ### Examples

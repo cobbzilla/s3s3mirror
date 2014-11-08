@@ -66,6 +66,13 @@ public class KeyCopyJob extends KeyJob {
         for (int tries = 0; tries < maxRetries; tries++) {
             if (verbose) log.info("copying (try #" + tries + "): " + key + " to: " + keydest);
             final CopyObjectRequest request = new CopyObjectRequest(options.getSourceBucket(), key, options.getDestinationBucket(), keydest);
+            
+            request.setStorageClass(StorageClass.valueOf(options.getStorageClass()));
+            
+            if (options.isEncrypt()) {
+				request.putCustomRequestHeader("x-amz-server-side-encryption", "AES256");
+			}
+            
             request.setNewObjectMetadata(sourceMetadata);
             if (options.isCrossAccountCopy()) {
                 request.setCannedAccessControlList(CannedAccessControlList.BucketOwnerFullControl);
