@@ -1,11 +1,9 @@
 #!/bin/bash
 
-THISDIR=$(dirname $0)
-cd ${THISDIR}
-THISDIR=$(pwd)
+THISDIR=$(cd $(dirname $0) && pwd)
 
-VERSION=1.2.4
-JARFILE=target/s3s3mirror-${VERSION}-SNAPSHOT.jar
+VERSION=1.2.5
+JARFILE=${THISDIR}/target/s3s3mirror-${VERSION}-SNAPSHOT.jar
 VERSION_ARG="-Ds3s3mirror.version=${VERSION}"
 
 DEBUG=$1
