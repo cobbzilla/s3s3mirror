@@ -81,30 +81,6 @@ public class MirrorMainTest {
         assertEquals(destPrefix, options.getDestPrefix());
     }
 
-    @Test
-    public void testInlineSourcePrefixAndPrefixOption() throws Exception {
-        final String prefix = "foo";
-        final MirrorMain main = new MirrorMain(new String[]{MirrorOptions.OPT_PREFIX, prefix, SOURCE + "/" + prefix, DESTINATION});
-        try {
-            main.parseArguments();
-            fail("expected IllegalArgumentException");
-        } catch (Exception e) {
-            assertTrue(e instanceof IllegalArgumentException);
-        }
-    }
-
-    @Test
-    public void testInlineDestinationPrefixAndPrefixOption() throws Exception {
-        final String prefix = "foo";
-        final MirrorMain main = new MirrorMain(new String[]{MirrorOptions.OPT_DEST_PREFIX, prefix, SOURCE, DESTINATION + "/" + prefix});
-        try {
-            main.parseArguments();
-            fail("expected IllegalArgumentException");
-        } catch (Exception e) {
-            assertTrue(e instanceof IllegalArgumentException);
-        }
-    }
-
     /**
      * When access keys are read from environment then the --proxy setting is valid.
      * If access keys are ready from s3cfg file then proxy settings are picked from there.

@@ -1,8 +1,5 @@
 package org.cobbzilla.s3s3mirror;
 
-import com.amazonaws.ClientConfiguration;
-import com.amazonaws.Protocol;
-import com.amazonaws.services.s3.AmazonS3Client;
 import lombok.Cleanup;
 import lombok.Getter;
 import lombok.Setter;
@@ -14,7 +11,8 @@ import java.io.File;
 import java.io.FileReader;
 
 /**
- * Provides the "main" method. Responsible for parsing options and setting up the MirrorMaster to manage the copy.
+ * Provides the "main" method. Responsible for parsing options, building the context,
+ * setting up the shutdown hook, then running a MirrorMaster to do the copy.
  */
 @Slf4j
 public class MirrorMain {
@@ -31,9 +29,8 @@ public class MirrorMain {
         }
     };
 
-    @Getter private AmazonS3Client client;
     @Getter private MirrorContext context;
-    @Getter private MirrorMaster master;
+    @Getter private MirrorMaster master = null;
 
     public MirrorMain(String[] args) { this.args = args; }
 
@@ -48,7 +45,7 @@ public class MirrorMain {
     }
 
     public void init() {
-        if (client == null) {
+        if (master == null) {
             try {
                 parseArguments();
             } catch (Exception e) {
@@ -57,26 +54,12 @@ public class MirrorMain {
                 System.exit(1);
             }
 
-            client = getAmazonS3Client();
             context = new MirrorContext(options);
-            master = new MirrorMaster(client, context);
+            master = new MirrorMaster(context);
 
             Runtime.getRuntime().addShutdownHook(context.getStats().getShutdownHook());
             Thread.setDefaultUncaughtExceptionHandler(uncaughtExceptionHandler);
         }
-    }
-
-    protected AmazonS3Client getAmazonS3Client() {
-        ClientConfiguration clientConfiguration = new ClientConfiguration().withProtocol((options.isSsl() ? Protocol.HTTPS : Protocol.HTTP))
-                .withMaxConnections(options.getMaxConnections());
-        if (options.getHasProxy()) {
-            clientConfiguration = clientConfiguration
-                    .withProxyHost(options.getProxyHost())
-                    .withProxyPort(options.getProxyPort());
-        }
-        AmazonS3Client client = new AmazonS3Client(options, clientConfiguration);
-        if (options.hasEndpoint()) client.setEndpoint(options.getEndpoint());
-        return client;
     }
 
     protected void parseArguments() throws Exception {

@@ -1,17 +1,15 @@
 package org.cobbzilla.s3s3mirror;
 
-import com.amazonaws.services.s3.AmazonS3Client;
-import com.amazonaws.services.s3.model.*;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
+import org.cobbzilla.s3s3mirror.store.FileSummary;
 
 @Slf4j
-public class KeyDeleteJob extends KeyJob {
+public abstract class KeyDeleteJob extends KeyCopyJob {
 
     private String keysrc;
 
-    public KeyDeleteJob (AmazonS3Client client, MirrorContext context, S3ObjectSummary summary, Object notifyLock) {
-        super(client, context, summary, notifyLock);
+    public KeyDeleteJob(MirrorContext context, FileSummary summary, Object notifyLock) {
+        super(context, summary, notifyLock);
 
         final MirrorOptions options = context.getOptions();
         keysrc = summary.getKey(); // NOTE: summary.getKey is the key in the destination bucket
@@ -21,7 +19,9 @@ public class KeyDeleteJob extends KeyJob {
         }
     }
 
-    @Override public Logger getLog() { return log; }
+    @Override protected boolean copyFile() throws Exception { throw new IllegalStateException("copyFile not supported"); }
+
+    protected abstract boolean deleteFile(String bucket, String key) throws Exception;
 
     @Override
     public void run() {
@@ -33,8 +33,6 @@ public class KeyDeleteJob extends KeyJob {
         try {
             if (!shouldDelete()) return;
 
-            final DeleteObjectRequest request = new DeleteObjectRequest(options.getDestinationBucket(), key);
-
             if (options.isDryRun()) {
                 log.info("Would have deleted "+key+" from destination because "+keysrc+" does not exist in source");
             } else {
@@ -42,14 +40,9 @@ public class KeyDeleteJob extends KeyJob {
                 for (int tries=0; tries<maxRetries; tries++) {
                     if (verbose) log.info("deleting (try #"+tries+"): "+key);
                     try {
-                        stats.s3deleteCount.incrementAndGet();
-                        client.deleteObject(request);
-                        deletedOK = true;
+                        deletedOK = deleteFile(options.getDestinationBucket(), key);
                         if (verbose) log.info("successfully deleted (on try #"+tries+"): "+key);
                         break;
-
-                    } catch (AmazonS3Exception s3e) {
-                        log.error("s3 exception deleting (try #"+tries+") "+key+": "+s3e);
 
                     } catch (Exception e) {
                         log.error("unexpected exception deleting (try #"+tries+") "+key+": "+e);
@@ -62,14 +55,15 @@ public class KeyDeleteJob extends KeyJob {
                     }
                 }
                 if (deletedOK) {
-                    context.getStats().objectsDeleted.incrementAndGet();
+                    stats.objectsDeleted.incrementAndGet();
                 } else {
-                    context.getStats().deleteErrors.incrementAndGet();
+                    stats.deleteErrors.incrementAndGet();
                 }
             }
 
         } catch (Exception e) {
             log.error("error deleting key: "+key+": "+e);
+            if (!options.isDryRun()) context.getStats().deleteErrors.incrementAndGet();
 
         } finally {
             synchronized (notifyLock) {
@@ -82,25 +76,18 @@ public class KeyDeleteJob extends KeyJob {
     private boolean shouldDelete() {
 
         final MirrorOptions options = context.getOptions();
-        final boolean verbose = options.isVerbose();
 
         // Does it exist in the source bucket
         try {
-            ObjectMetadata metadata = getObjectMetadata(options.getSourceBucket(), keysrc, options);
-            return false; // object exists in source bucket, don't delete it from destination bucket
-
-        } catch (AmazonS3Exception e) {
-            if (e.getStatusCode() == 404) {
-                if (verbose) log.info("Key not found in source bucket (will delete from destination): "+ keysrc);
+            final FileSummary metadata = getMetadata(options.getSourceBucket(), keysrc);
+            if (metadata == null) {
+                if (options.isVerbose()) log.info("Key not found in source bucket (will delete from destination): " + keysrc);
                 return true;
-            } else {
-                log.warn("Error getting metadata for " + options.getSourceBucket() + "/" + keysrc + " (not deleting): " + e);
-                return false;
             }
         } catch (Exception e) {
             log.warn("Error getting metadata for " + options.getSourceBucket() + "/" + keysrc + " (not deleting): " + e);
-            return false;
         }
+        return false;
     }
 
 }

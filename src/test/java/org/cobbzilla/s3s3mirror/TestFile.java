@@ -17,6 +17,7 @@ class TestFile {
     enum Copy  { SOURCE, DEST, SOURCE_AND_DEST }
     enum Clean { SOURCE, DEST, SOURCE_AND_DEST }
 
+    public String key;
     public File file;
     public String data;
 
@@ -30,6 +31,7 @@ class TestFile {
 
     public static TestFile create(String key, AmazonS3Client client, List<S3Asset> stuffToCleanup, Copy copy, Clean clean) throws Exception {
         TestFile testFile = new TestFile();
+        testFile.key = key;
         switch (clean) {
             case SOURCE:
                 stuffToCleanup.add(new S3Asset(MirrorTest.SOURCE, key));

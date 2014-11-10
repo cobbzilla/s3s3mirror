@@ -1,32 +1,33 @@
 package org.cobbzilla.s3s3mirror;
 
-import com.amazonaws.services.s3.AmazonS3Client;
-import com.amazonaws.services.s3.model.*;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
+import org.cobbzilla.s3s3mirror.store.FileSummary;
 
-import java.util.Date;
-
-/**
- * Handles a single key. Determines if it should be copied, and if so, performs the copy operation.
- */
 @Slf4j
-public class KeyCopyJob extends KeyJob {
+public abstract class KeyCopyJob implements KeyJob {
 
-    protected String keydest;
+    protected final MirrorContext context;
+    protected final FileSummary summary;
+    protected final Object notifyLock;
 
-    public KeyCopyJob(AmazonS3Client client, MirrorContext context, S3ObjectSummary summary, Object notifyLock) {
-        super(client, context, summary, notifyLock);
+    @Getter protected String keyDestination;
 
-        keydest = summary.getKey();
+    protected KeyCopyJob(MirrorContext context, FileSummary summary, Object notifyLock) {
+        this.context = context;
+        this.summary = summary;
+        this.notifyLock = notifyLock;
+
+        keyDestination = summary.getKey();
         final MirrorOptions options = context.getOptions();
         if (options.hasDestPrefix()) {
-            keydest = keydest.substring(options.getPrefixLength());
-            keydest = options.getDestPrefix() + keydest;
+            keyDestination = keyDestination.substring(options.getPrefixLength());
+            keyDestination = options.getDestPrefix() + keyDestination;
         }
     }
 
-    @Override public Logger getLog() { return log; }
+    protected abstract FileSummary getMetadata(String bucket, String key) throws Exception;
+    protected abstract boolean copyFile() throws Exception;
 
     @Override
     public void run() {
@@ -34,13 +35,11 @@ public class KeyCopyJob extends KeyJob {
         final String key = summary.getKey();
         try {
             if (!shouldTransfer()) return;
-            final ObjectMetadata sourceMetadata = getObjectMetadata(options.getSourceBucket(), key, options);
-            final AccessControlList objectAcl = getAccessControlList(options, key);
 
             if (options.isDryRun()) {
-                log.info("Would have copied " + key + " to destination: " + keydest);
+                log.info("Would have copied " + key + " to destination: " + getKeyDestination());
             } else {
-                if (keyCopied(sourceMetadata, objectAcl)) {
+                if (tryCopy()) {
                     context.getStats().objectsCopied.incrementAndGet();
                 } else {
                     context.getStats().copyErrors.incrementAndGet();
@@ -48,6 +47,7 @@ public class KeyCopyJob extends KeyJob {
             }
         } catch (Exception e) {
             log.error("error copying key: " + key + ": " + e);
+            if (!options.isDryRun()) context.getStats().copyErrors.incrementAndGet();
 
         } finally {
             synchronized (notifyLock) {
@@ -57,36 +57,18 @@ public class KeyCopyJob extends KeyJob {
         }
     }
 
-    boolean keyCopied(ObjectMetadata sourceMetadata, AccessControlList objectAcl) {
-        String key = summary.getKey();
-        MirrorOptions options = context.getOptions();
-        boolean verbose = options.isVerbose();
-        int maxRetries= options.getMaxRetries();
-        MirrorStats stats = context.getStats();
+    private boolean tryCopy() {
+        final MirrorOptions options = context.getOptions();
+        final boolean verbose = options.isVerbose();
+        final int maxRetries = options.getMaxRetries();
+        final String key = summary.getKey();
+        final String keydest = getKeyDestination();
+
         for (int tries = 0; tries < maxRetries; tries++) {
             if (verbose) log.info("copying (try #" + tries + "): " + key + " to: " + keydest);
-            final CopyObjectRequest request = new CopyObjectRequest(options.getSourceBucket(), key, options.getDestinationBucket(), keydest);
-            
-            request.setStorageClass(StorageClass.valueOf(options.getStorageClass()));
-            
-            if (options.isEncrypt()) {
-				request.putCustomRequestHeader("x-amz-server-side-encryption", "AES256");
-			}
-            
-            request.setNewObjectMetadata(sourceMetadata);
-            if (options.isCrossAccountCopy()) {
-                request.setCannedAccessControlList(CannedAccessControlList.BucketOwnerFullControl);
-            } else {
-                request.setAccessControlList(objectAcl);
-            }
+
             try {
-                stats.s3copyCount.incrementAndGet();
-                client.copyObject(request);
-                stats.bytesCopied.addAndGet(sourceMetadata.getContentLength());
-                if (verbose) log.info("successfully copied (on try #" + tries + "): " + key + " to: " + keydest);
-                return true;
-            } catch (AmazonS3Exception s3e) {
-                log.error("s3 exception copying (try #" + tries + ") " + key + " to: " + keydest + ": " + s3e);
+                return copyFile();
             } catch (Exception e) {
                 log.error("unexpected exception copying (try #" + tries + ") " + key + " to: " + keydest + ": " + e);
             }
@@ -100,51 +82,35 @@ public class KeyCopyJob extends KeyJob {
         return false;
     }
 
-    private boolean shouldTransfer() {
+    private boolean shouldTransfer() throws Exception {
         final MirrorOptions options = context.getOptions();
         final String key = summary.getKey();
         final boolean verbose = options.isVerbose();
 
         if (options.hasCtime()) {
-            final Date lastModified = summary.getLastModified();
+            final Long lastModified = summary.getLastModified();
             if (lastModified == null) {
                 if (verbose) log.info("No Last-Modified header for key: " + key);
 
             } else {
-                if (lastModified.getTime() < options.getMaxAge()) {
+                if (lastModified < options.getMaxAge()) {
                     if (verbose) log.info("key "+key+" (lastmod="+lastModified+") is older than "+options.getCtime()+" (cutoff="+options.getMaxAgeDate()+"), not copying");
                     return false;
                 }
             }
         }
-        final ObjectMetadata metadata;
-        try {
-            metadata = getObjectMetadata(options.getDestinationBucket(), keydest, options);
-        } catch (AmazonS3Exception e) {
-            if (e.getStatusCode() == 404) {
-                if (verbose) log.info("Key not found in destination bucket (will copy): "+ keydest);
-                return true;
-            } else {
-                log.warn("Error getting metadata for " + options.getDestinationBucket() + "/" + keydest + " (not copying): " + e);
-                return false;
-            }
-        } catch (Exception e) {
-            log.warn("Error getting metadata for " + options.getDestinationBucket() + "/" + keydest + " (not copying): " + e);
-            return false;
-        }
 
-        if (summary.getSize() > MirrorOptions.MAX_SINGLE_REQUEST_UPLOAD_FILE_SIZE) {
-            return metadata.getContentLength() != summary.getSize();
-        }
-        final boolean objectChanged = objectChanged(metadata);
-        if (verbose && !objectChanged) log.info("Destination file is same as source, not copying: "+ key);
+        final FileSummary destination = getMetadata(options.getDestinationBucket(), getKeyDestination());
+        if (destination == null) return true;
 
-        return objectChanged;
-    }
+        if (destination.getSize() != summary.getSize()) return true;
 
-    boolean objectChanged(ObjectMetadata metadata) {
-        final KeyFingerprint sourceFingerprint = new KeyFingerprint(summary.getSize(), summary.getETag());
-        final KeyFingerprint destFingerprint = new KeyFingerprint(metadata.getContentLength(), metadata.getETag());
-        return !sourceFingerprint.equals(destFingerprint);
+        final String destETag = destination.getETag();
+        final String srcETag = summary.getETag();
+        if (destETag != null && srcETag != null && !destETag.equals(srcETag)) return true;
+
+        if (verbose) log.info("Destination file is same as source, not copying: "+ key);
+
+        return false;
     }
 }

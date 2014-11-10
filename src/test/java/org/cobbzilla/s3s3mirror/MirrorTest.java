@@ -1,15 +1,9 @@
 package org.cobbzilla.s3s3mirror;
 
-import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang.RandomStringUtils;
-import org.junit.After;
 import org.junit.Test;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import static org.cobbzilla.s3s3mirror.MirrorOptions.*;
 import static org.cobbzilla.s3s3mirror.TestFile.Clean;
@@ -18,51 +12,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 @Slf4j
-public class MirrorTest {
-
-    public static final String SOURCE_ENV_VAR = "S3S3_TEST_SOURCE";
-    public static final String DEST_ENV_VAR = "S3S3_TEST_DEST";
-
-    public static final String SOURCE = System.getenv(SOURCE_ENV_VAR);
-    public static final String DESTINATION = System.getenv(DEST_ENV_VAR);
-
-    private List<S3Asset> stuffToCleanup = new ArrayList<S3Asset>();
-
-    // Every individual test *must* initialize the "main" instance variable, otherwise NPE gets thrown here.
-    private MirrorMain main = null;
-
-    private TestFile createTestFile(String key, Copy copy, Clean clean) throws Exception {
-        return TestFile.create(key, main.getClient(), stuffToCleanup, copy, clean);
-    }
-
-    public static String random(int size) {
-        return RandomStringUtils.randomAlphanumeric(size) + "_" + System.currentTimeMillis();
-    }
-
-    private boolean checkEnvs() {
-        if (SOURCE == null || DESTINATION == null) {
-            log.warn("No "+SOURCE_ENV_VAR+" and/or no "+DEST_ENV_VAR+" found in enviroment, skipping test");
-            return false;
-        }
-        return true;
-    }
-
-    @After
-    public void cleanupS3Assets () {
-        // Every individual test *must* initialize the "main" instance variable, otherwise NPE gets thrown here.
-        if (checkEnvs()) {
-            AmazonS3Client client = main.getClient();
-            for (S3Asset asset : stuffToCleanup) {
-                try {
-                    log.info("cleanupS3Assets: deleting "+asset);
-                    client.deleteObject(asset.bucket, asset.key);
-                } catch (Exception e) {
-                    log.error("Error cleaning up object: "+asset+": "+e.getMessage());
-                }
-            }
-            main = null;
-        }
-    }
+public class MirrorTest extends MirrorTestBase {
 
     @Test
     public void testSimpleCopy () throws Exception {
@@ -94,7 +44,7 @@ public class MirrorTest {
         assertEquals(1, main.getContext().getStats().objectsCopied.get());
         assertEquals(testFile.data.length(), main.getContext().getStats().bytesCopied.get());
 
-        final ObjectMetadata metadata = main.getClient().getObjectMetadata(DESTINATION, key);
+        final ObjectMetadata metadata = getS3Client().getObjectMetadata(DESTINATION, key);
         assertEquals(testFile.data.length(), metadata.getContentLength());
     }
 
@@ -128,7 +78,7 @@ public class MirrorTest {
         assertEquals(1, main.getContext().getStats().objectsCopied.get());
         assertEquals(testFile.data.length(), main.getContext().getStats().bytesCopied.get());
 
-        final ObjectMetadata metadata = main.getClient().getObjectMetadata(DESTINATION, destKey);
+        final ObjectMetadata metadata = getS3Client().getObjectMetadata(DESTINATION, destKey);
         assertEquals(testFile.data.length(), metadata.getContentLength());
     }
 
@@ -165,7 +115,7 @@ public class MirrorTest {
         // Expect none of the original dest files to be there anymore
         for (int i=0; i<numDestFiles; i++) {
             try {
-                main.getClient().getObjectMetadata(DESTINATION, destKeys[i]);
+                getS3Client().getObjectMetadata(DESTINATION, destKeys[i]);
                 fail("testDeleteRemoved: expected "+destKeys[i]+" to be removed from destination bucket "+DESTINATION);
             } catch (AmazonS3Exception e) {
                 if (e.getStatusCode() != 404) {
@@ -176,10 +126,10 @@ public class MirrorTest {
 
         // Expect source file to now be present in both source and destination buckets
         ObjectMetadata metadata;
-        metadata = main.getClient().getObjectMetadata(SOURCE, srcKey);
+        metadata = getS3Client().getObjectMetadata(SOURCE, srcKey);
         assertEquals(srcFile.data.length(), metadata.getContentLength());
 
-        metadata = main.getClient().getObjectMetadata(DESTINATION, srcKey);
+        metadata = getS3Client().getObjectMetadata(DESTINATION, srcKey);
         assertEquals(srcFile.data.length(), metadata.getContentLength());
     }
 

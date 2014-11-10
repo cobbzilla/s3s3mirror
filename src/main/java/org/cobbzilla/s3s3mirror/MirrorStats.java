@@ -25,13 +25,17 @@ public class MirrorStats {
     public final AtomicLong objectsRead = new AtomicLong(0);
     public final AtomicLong objectsCopied = new AtomicLong(0);
     public final AtomicLong copyErrors = new AtomicLong(0);
+    public final AtomicLong objectsPut = new AtomicLong(0);
+    public final AtomicLong putErrors = new AtomicLong(0);
     public final AtomicLong objectsDeleted = new AtomicLong(0);
     public final AtomicLong deleteErrors = new AtomicLong(0);
 
     public final AtomicLong s3copyCount = new AtomicLong(0);
+    public final AtomicLong s3putCount = new AtomicLong(0);
     public final AtomicLong s3deleteCount = new AtomicLong(0);
     public final AtomicLong s3getCount = new AtomicLong(0);
     public final AtomicLong bytesCopied = new AtomicLong(0);
+    public final AtomicLong bytesUploaded = new AtomicLong(0);
 
     public static final long HOUR = TimeUnit.HOURS.toMillis(1);
     public static final long MINUTE = TimeUnit.MINUTES.toMillis(1);
@@ -42,20 +46,24 @@ public class MirrorStats {
         final double durationMinutes = durationMillis / 60000.0d;
         final String duration = String.format("%d:%02d:%02d", durationMillis / HOUR, (durationMillis % HOUR) / MINUTE, (durationMillis % MINUTE) / SECOND);
         final double readRate = objectsRead.get() / durationMinutes;
-        final double copyRate = objectsCopied.get() / durationMinutes;
+        final double copyRate = (objectsCopied.get() + objectsPut.get()) / durationMinutes;
         final double deleteRate = objectsDeleted.get() / durationMinutes;
         return "read: "+objectsRead+ "\n"
                 + "copied: "+objectsCopied+"\n"
                 + "copy errors: "+copyErrors+"\n"
+                + "uploaded: "+objectsPut+"\n"
+                + "upload errors: "+putErrors+"\n"
                 + "deleted: "+objectsDeleted+"\n"
                 + "delete errors: "+deleteErrors+"\n"
                 + "duration: "+duration+"\n"
                 + "read rate: "+readRate+"/minute\n"
-                + "copy rate: "+copyRate+"/minute\n"
+                + "copy+upload rate: "+copyRate+"/minute\n"
                 + "delete rate: "+deleteRate+"/minute\n"
                 + "bytes copied: "+formatBytes(bytesCopied.get())+"\n"
+                + "bytes copied: "+formatBytes(bytesUploaded.get())+"\n"
                 + "GET operations: "+s3getCount+"\n"
                 + "COPY operations: "+ s3copyCount+"\n"
+                + "PUT operations: "+ s3putCount+"\n"
                 + "DELETE operations: "+ s3deleteCount+"\n";
     }
 

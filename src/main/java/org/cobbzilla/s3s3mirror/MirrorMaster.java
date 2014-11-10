@@ -1,25 +1,20 @@
 package org.cobbzilla.s3s3mirror;
 
-import com.amazonaws.services.s3.AmazonS3Client;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.*;
 
 /**
- * Manages the Starts a KeyLister and sends batches of keys to the ExecutorService for handling by KeyJobs
+ * Sets up the task execution service and the KeyMasters to run the copy (and optionally delete) operations.
  */
 @Slf4j
 public class MirrorMaster {
 
     public static final String VERSION = System.getProperty("s3s3mirror.version");
 
-    private final AmazonS3Client client;
     private final MirrorContext context;
 
-    public MirrorMaster(AmazonS3Client client, MirrorContext context) {
-        this.client = client;
-        this.context = context;
-    }
+    public MirrorMaster(MirrorContext context) { this.context = context; }
 
     public void mirror() {
 
@@ -40,14 +35,14 @@ public class MirrorMaster {
 
         final ThreadPoolExecutor executorService = new ThreadPoolExecutor(options.getMaxThreads(), options.getMaxThreads(), 1, TimeUnit.MINUTES, workQueue, rejectedExecutionHandler);
 
-        final KeyMaster copyMaster = new CopyMaster(client, context, workQueue, executorService);
+        final KeyMaster copyMaster = FileStoreFactory.buildCopyMaster(context, workQueue, executorService);
         KeyMaster deleteMaster = null;
 
         try {
             copyMaster.start();
 
             if (context.getOptions().isDeleteRemoved()) {
-                deleteMaster = new DeleteMaster(client, context, workQueue, executorService);
+                deleteMaster = FileStoreFactory.buildDeleteMaster(context, workQueue, executorService);
                 deleteMaster.start();
             }
 
@@ -67,11 +62,13 @@ public class MirrorMaster {
             if (deleteMaster != null) {
                 try { deleteMaster.stop(); } catch (Exception e) { log.error("Error stopping deleteMaster: "+e, e); }
             }
+            // this will wait for currently executing tasks to finish, but there should be none by now
+            executorService.shutdown();
         }
     }
 
     public static int getMaxQueueCapacity(MirrorOptions options) {
-        return 10 * options.getMaxThreads();
+        return 100 * options.getMaxThreads();
     }
 
 }

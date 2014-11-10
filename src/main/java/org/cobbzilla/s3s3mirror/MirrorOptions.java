@@ -1,21 +1,22 @@
 package org.cobbzilla.s3s3mirror;
 
 import com.amazonaws.auth.AWSCredentials;
-import com.amazonaws.services.s3.model.StorageClass;
-
+import com.amazonaws.services.s3.model.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.joda.time.DateTime;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 
+import java.io.File;
 import java.util.Date;
 
-import static org.cobbzilla.s3s3mirror.MirrorConstants.*;
+import static org.cobbzilla.s3s3mirror.MirrorConstants.GB;
 
 public class MirrorOptions implements AWSCredentials {
 
     public static final String S3_PROTOCOL_PREFIX = "s3://";
+    public static final String sep = File.separator;
 
     public static final String AWS_ACCESS_KEY = "AWS_ACCESS_KEY_ID";
     public static final String AWS_SECRET_KEY = "AWS_SECRET_ACCESS_KEY";
@@ -35,24 +36,24 @@ public class MirrorOptions implements AWSCredentials {
     public static final String LONGOPT_VERBOSE = "--verbose";
     @Option(name=OPT_VERBOSE, aliases=LONGOPT_VERBOSE, usage=USAGE_VERBOSE)
     @Getter @Setter private boolean verbose = false;
-    
+
     public static final String USAGE_SSL = "Use SSL for all S3 api operations";
     public static final String OPT_SSL = "-s";
     public static final String LONGOPT_SSL = "--ssl";
     @Option(name=OPT_SSL, aliases=LONGOPT_SSL, usage=USAGE_SSL)
     @Getter @Setter private boolean ssl = false;
-    
+
     public static final String USAGE_ENCRYPT = "Enable AWS managed server-side encryption";
     public static final String OPT_ENCRYPT = "-E";
     public static final String LONGOPT_ENCRYPT = "--server-side-encryption";
     @Option(name=OPT_ENCRYPT, aliases=LONGOPT_ENCRYPT, usage=USAGE_ENCRYPT)
     @Getter @Setter private boolean encrypt = false;
-    
-    public static final String USAGE_STORAGE_CLASS = "Specify the S3 StorageClass (Standard | ReducedRedundancy)";
+
+    public static final String USAGE_STORAGE_CLASS = "The S3 StorageClass (default Standard)";
     public static final String OPT_STORAGE_CLASS = "-l";
     public static final String LONGOPT_STORAGE_CLASS = "--storage-class";
     @Option(name=OPT_STORAGE_CLASS, aliases=LONGOPT_STORAGE_CLASS, usage=USAGE_STORAGE_CLASS)
-    @Getter @Setter private String storageClass = "Standard"; 
+    @Getter @Setter private S3StorageClass storageClass = S3StorageClass.Standard;
 
     public static final String USAGE_PREFIX = "Only copy objects whose keys start with this prefix";
     public static final String OPT_PREFIX = "-p";
@@ -133,12 +134,7 @@ public class MirrorOptions implements AWSCredentials {
     @Getter @Setter public String proxyHost = null;
     @Getter @Setter public int proxyPort = -1;
 
-    public boolean getHasProxy() {
-        boolean hasProxyHost = proxyHost != null && proxyHost.trim().length() > 0;
-        boolean hasProxyPort = proxyPort != -1;
-
-        return hasProxyHost && hasProxyPort;
-    }
+    public boolean getHasProxy() { return proxyHost != null && proxyHost.trim().length() > 0; }
 
     private long initMaxAge() {
 
@@ -209,36 +205,92 @@ public class MirrorOptions implements AWSCredentials {
             this.maxAgeDate = new Date(maxAge).toString();
         }
 
-        String scrubbed;
-        int slashPos;
+        final BucketAndPrefix src = new BucketAndPrefix(source, prefix);
+        sourceBucket = src.bucket;
+        prefix = src.prefix;
 
-        scrubbed = scrubS3ProtocolPrefix(source);
-        slashPos = scrubbed.indexOf('/');
-        if (slashPos == -1) {
-            sourceBucket = scrubbed;
-        } else {
-            sourceBucket = scrubbed.substring(0, slashPos);
-            if (hasPrefix()) throw new IllegalArgumentException("Cannot use a "+OPT_PREFIX+"/"+LONGOPT_PREFIX+" argument and source path that includes a prefix at the same time");
-            prefix = scrubbed.substring(slashPos+1);
-        }
-
-        scrubbed = scrubS3ProtocolPrefix(destination);
-        slashPos = scrubbed.indexOf('/');
-        if (slashPos == -1) {
-            destinationBucket = scrubbed;
-        } else {
-            destinationBucket = scrubbed.substring(0, slashPos);
-            if (hasDestPrefix()) throw new IllegalArgumentException("Cannot use a "+OPT_DEST_PREFIX+"/"+LONGOPT_DEST_PREFIX+" argument and destination path that includes a dest-prefix at the same time");
-            destPrefix = scrubbed.substring(slashPos+1);
-        }
+        final BucketAndPrefix dest = new BucketAndPrefix(destination, destPrefix);
+        destinationBucket = dest.bucket;
+        destPrefix = dest.prefix;
     }
 
-    protected String scrubS3ProtocolPrefix(String bucket) {
-        bucket = bucket.trim();
-        if (bucket.startsWith(S3_PROTOCOL_PREFIX)) {
-            bucket = bucket.substring(S3_PROTOCOL_PREFIX.length());
+    public void apply(InitiateMultipartUploadRequest request) {
+        request.setStorageClass(StorageClass.valueOf(getStorageClass().name()));
+        if (isEncrypt()) request.putCustomRequestHeader("x-amz-server-side-encryption", "AES256");
+    }
+
+    public void apply(PutObjectRequest request) {
+        request.setStorageClass(StorageClass.valueOf(getStorageClass().name()));
+        if (isEncrypt()) request.putCustomRequestHeader("x-amz-server-side-encryption", "AES256");
+    }
+
+    public void apply(UploadPartRequest request) {
+        if (isEncrypt()) request.putCustomRequestHeader("x-amz-server-side-encryption", "AES256");
+    }
+
+    public void apply(CopyObjectRequest request) {
+        request.setStorageClass(StorageClass.valueOf(getStorageClass().name()));
+        if (isEncrypt()) request.putCustomRequestHeader("x-amz-server-side-encryption", "AES256");
+    }
+
+    // Consolidates logic around parsing source/destination as buckets/folders/prefixes
+    static class BucketAndPrefix {
+        public String bucket;
+        public String prefix;
+
+        protected String scrubS3ProtocolPrefix(String bucket) {
+            bucket = bucket.trim();
+            if (bucket.startsWith(S3_PROTOCOL_PREFIX)) {
+                bucket = bucket.substring(S3_PROTOCOL_PREFIX.length());
+            }
+            return bucket;
         }
-        return bucket;
+
+        public BucketAndPrefix (String path, String pfx) {
+
+            final String scrubbed = scrubS3ProtocolPrefix(path);
+            final int slashPos = scrubbed.indexOf('/');
+            final int hereDir = scrubbed.indexOf("." + sep);
+
+            if (slashPos == 0 || scrubbed.indexOf(sep) == 0 || hereDir == 0) {
+                // this is a local path since it starts with / or ./
+                if (hereDir == 0) {
+                    // replace ./ with current directory name
+                    bucket = new File(System.getProperty("user.dir") + (scrubbed.length() > 2 ? sep + scrubbed.substring(2) : "")).getAbsolutePath();
+                } else {
+                    bucket = scrubbed;
+                }
+
+                // if the path is not to a dir, then assume anything after the last / should be pre-pended to the prefix
+                final File bucketDir = new File(bucket);
+                if (!bucketDir.isDirectory()) {
+                    bucket = bucketDir.getParentFile().getAbsolutePath();
+                    prefix = pfx == null || pfx.trim().isEmpty()
+                            ? bucketDir.getName()
+                            : bucketDir.getName() + sep + pfx;
+                } else {
+                    prefix = pfx;
+                }
+                if (!bucket.endsWith(sep)) bucket += sep;
+
+            } else if (slashPos != -1) {
+                // this is for S3, in the form "bucket/prefix"
+                bucket = scrubbed.substring(0, slashPos);
+                if (slashPos < scrubbed.length()-1) {
+                    prefix = pfx == null || pfx.trim().isEmpty()
+                            ? scrubbed.substring(slashPos+1)
+                            : scrubbed.substring(slashPos+1) + pfx;
+                } else {
+                    prefix = pfx;
+                }
+
+            } else {
+                bucket = scrubbed;
+                prefix = pfx;
+            }
+
+            if (prefix != null && prefix.trim().length() == 0) prefix = null;
+        }
     }
 
 }
