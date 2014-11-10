@@ -20,8 +20,8 @@ public class MirrorTestBase {
     public static final String SOURCE_ENV_VAR = "S3S3_TEST_SOURCE";
     public static final String DEST_ENV_VAR = "S3S3_TEST_DEST";
 
-    public static final String SOURCE = "upcloud-test-bucket"; //System.getenv(SOURCE_ENV_VAR);
-    public static final String DESTINATION = "upcloud-bucket-test2"; //System.getenv(DEST_ENV_VAR);
+    public static final String SOURCE = System.getenv(SOURCE_ENV_VAR);
+    public static final String DESTINATION = System.getenv(DEST_ENV_VAR);
 
     protected List<S3Asset> stuffToCleanup = new ArrayList<S3Asset>();
 
