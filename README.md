@@ -1,7 +1,7 @@
 s3s3mirror
 ==========
 
-A utility for mirroring content from one S3 bucket to another.
+A utility for mirroring content between S3 buckets and/or local directories. 
 
 Designed to be lightning-fast and highly concurrent, with modest CPU and memory requirements.
 
@@ -42,6 +42,8 @@ The above command requires that Maven 3 is installed.
 
     s3s3mirror.sh [options] <source-bucket>[/src-prefix/path/...] <destination-bucket>[/dest-prefix/path/...]
 
+If a bucket name starts with `/` or `./` it will be interpreted as a directory path on the local system. On Windows, use `\` or `.\`  
+
 ### Options
 
     -c (--ctime) N           : Only copy objects whose Last-Modified date is younger than this many days
@@ -65,11 +67,10 @@ The above command requires that Maven 3 is installed.
     -C (--cross-account-copy) : Copy across AWS accounts. Only Resource-based policies are supported (as
                                 specified by AWS documentation) for cross account copying
                                 Default is false (copying within same account, preserving ACLs across copies)
-                                If this option is active, the owner of the destination bucket will receive full control
-                                
-    -s (--ssl)                    : Use SSL for all S3 api operations (default false)
+                                If this option is active, the owner of the destination bucket will receive full control                                
+    -s (--ssl)                : Use SSL for all S3 api operations (default false)
     -E (--server-side-encryption) : Enable AWS managed server-side encryption (default false)
-    -l (--storage-class)		  : S3 storage class "Standard" or "ReducedRedundancy" (default Standard)
+    -l (--storage-class)      : S3 storage class "Standard" or "ReducedRedundancy" (default Standard)
 
 
 ### Examples
@@ -107,5 +108,15 @@ BAD IDEA: If copying within a single bucket, do *not* put the destination below 
     s3s3mirror.sh source/foo source/foo/subfolder
     s3s3mirror.sh -p foo -d foo/subfolder source source
 *This might cause recursion and raise your AWS bill unnecessarily*
+
+MORE BAD IDEAS: Use caution with the `-X` flag. If run from the wrong directory, or you will most likely *delete everything* on the destination.
+
+    s3s3mirror.sh -X /some/empty/dir some-bucket
+    s3s3mirror.sh -X some-empty-bucket ./
+    s3s3mirror.sh -X some-empty-bucket /
+
+* The first will delete everything in some-bucket
+* The second will delete everything in your current directory
+* The third will delete everything on your hard drive!
 
 ###### If you've enjoyed using s3s3mirror and are looking for a warm-fuzzy feeling, consider dropping a little somethin' into my [tip jar](https://www.gittip.com/cobbzilla)
