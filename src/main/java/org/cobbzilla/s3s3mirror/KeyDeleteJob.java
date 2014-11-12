@@ -15,7 +15,7 @@ public abstract class KeyDeleteJob extends KeyCopyJob {
         keysrc = summary.getKey(); // NOTE: summary.getKey is the key in the destination bucket
         if (options.hasPrefix()) {
             keysrc = keysrc.substring(options.getDestPrefixLength());
-            keysrc = options.getPrefix() + keysrc;
+            keysrc = options.getPrefix() + keyDestination;
         }
     }
 

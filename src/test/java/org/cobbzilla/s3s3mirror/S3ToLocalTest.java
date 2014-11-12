@@ -66,12 +66,33 @@ public class S3ToLocalTest extends MirrorTestBase {
     }
 
     @Test
+    public void testCopyFromBucketWithPrefixToDestWithOtherPrefix() throws Exception {
+        final String dir = "dir_"+random(10);
+        final String key = "test_"+random(10);
+        final String[] args = {SOURCE+"/foo/"+dir+"/", "./tmp/"};
+        main = new MirrorMain(args);
+        main.init();
+
+        final TestFile key1 = createTestFile("foo/"+dir+"/"+key+"_1", TestFile.Copy.SOURCE, TestFile.Clean.SOURCE);
+        final TestFile key2 = createTestFile("foo/"+dir+"/"+key+"_2", TestFile.Copy.SOURCE, TestFile.Clean.SOURCE);
+        final TestFile key3 = createTestFile("foo/"+key+"_3", TestFile.Copy.SOURCE, TestFile.Clean.SOURCE);
+        final TestFile key4 = createTestFile("foo/"+key+"_4", TestFile.Copy.SOURCE, TestFile.Clean.SOURCE);
+
+        main.run();
+
+        assertEquals(key1.file.length(), new File("tmp/"+key+"_1").length());
+        assertEquals(key2.file.length(), new File("tmp/"+key+"_2").length());
+    }
+
+    @Test
     public void testDeleteRemoved () throws Exception {
         if (!checkEnvs()) return;
 
         final String key = "testDeleteRemoved_"+random(10);
 
-        main = new MirrorMain(new String[]{OPT_VERBOSE, OPT_PREFIX, key, OPT_DELETE_REMOVED, SOURCE, localDir.getAbsolutePath()});
+        main = new MirrorMain(new String[]{OPT_VERBOSE, OPT_DELETE_REMOVED,
+                OPT_PREFIX, key, SOURCE,
+                localDir.getAbsolutePath(), OPT_DEST_PREFIX, key});
         main.init();
 
         // Write some files to dest

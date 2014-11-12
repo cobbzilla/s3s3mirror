@@ -20,7 +20,13 @@ public abstract class KeyCopyJob implements KeyJob {
 
         keyDestination = summary.getKey();
         final MirrorOptions options = context.getOptions();
-        if (options.hasDestPrefix()) {
+        if (!options.hasDestPrefix()
+                && options.hasPrefix()
+                && keyDestination.startsWith(options.getPrefix())
+                && keyDestination.length() > options.getPrefixLength()) {
+            keyDestination = keyDestination.substring(options.getPrefixLength());
+
+        } else if (options.hasDestPrefix()) {
             keyDestination = keyDestination.substring(options.getPrefixLength());
             keyDestination = options.getDestPrefix() + keyDestination;
         }

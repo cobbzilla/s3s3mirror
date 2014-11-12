@@ -89,7 +89,7 @@ public class MirrorTest extends MirrorTestBase {
         final String key = "testDeleteRemoved_"+random(10);
 
         main = new MirrorMain(new String[]{OPT_VERBOSE, OPT_PREFIX, key,
-                                           OPT_DELETE_REMOVED, SOURCE, DESTINATION});
+                                           OPT_DELETE_REMOVED, SOURCE, DESTINATION+"/"+key});
         main.init();
 
         // Write some files to dest
