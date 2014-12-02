@@ -109,7 +109,7 @@ BAD IDEA: If copying within a single bucket, do *not* put the destination below 
     s3s3mirror.sh -p foo -d foo/subfolder source source
 *This might cause recursion and raise your AWS bill unnecessarily*
 
-MORE BAD IDEAS: Use caution with the `-X` flag. If run from the wrong directory, or you will most likely *delete everything* on the destination.
+MORE BAD IDEAS: Use caution with the `-X` flag. If run from the wrong directory, you will likely *delete everything* on the destination.
 
     s3s3mirror.sh -X /some/empty/dir some-bucket
     s3s3mirror.sh -X some-empty-bucket ./
