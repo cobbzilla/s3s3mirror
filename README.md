@@ -10,7 +10,15 @@ An object will be copied if and only if at least one of the following holds true
 * The object does not exist in the destination bucket.
 * The size or ETag of the object in the destination bucket are different from the size/ETag in the source bucket.
 
-When copying, the source metadata and ACL lists are also copied to the destination object.
+When copying, the source metadata and ACLs are also copied to the destination object.
+
+### *New in 2.0: Local filesystem support*
+
+The latest s3s3mirror permits the source or destination to be a local filesystem path. Some caveats when copying to/from your local system: 
+
+* The ETag comparison is omitted since local files do not have ETags, and even if they did, they wouldn't match with what S3 generates.
+* When copying from S3 to your local system, metadata and ACLs are not copied (what would they mean anyway on your local system?)
+* When copying from your local system to S3, no metadata or ACLs are defined for the S3 object (they will be subject to whatever default IAM policies you have set for the bucket).
 
 ### Motivation
 
