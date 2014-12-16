@@ -2,6 +2,7 @@ package org.cobbzilla.s3s3mirror;
 
 import org.cobbzilla.s3s3mirror.store.s3.master.*;
 
+import java.io.File;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 
@@ -28,7 +29,7 @@ public class FileStoreFactory {
         }
     }
 
-    public static boolean isLocalPath(String path) { return path.startsWith(".") || path.startsWith("/"); }
+    public static boolean isLocalPath(String path) { return path.startsWith(".") || path.startsWith(File.separator) || path.startsWith("/"); }
 
     // factory method for DeleteMaster
     public static KeyMaster buildDeleteMaster(MirrorContext context, BlockingQueue<Runnable> workQueue, ThreadPoolExecutor executor) {
