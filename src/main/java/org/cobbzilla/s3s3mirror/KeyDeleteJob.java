@@ -1,9 +1,7 @@
 package org.cobbzilla.s3s3mirror;
 
-import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.s3s3mirror.store.FileSummary;
 
-@Slf4j
 public abstract class KeyDeleteJob extends KeyCopyJob {
 
     private String keysrc;
@@ -34,23 +32,23 @@ public abstract class KeyDeleteJob extends KeyCopyJob {
             if (!shouldDelete()) return;
 
             if (options.isDryRun()) {
-                log.info("Would have deleted "+key+" from destination because "+keysrc+" does not exist in source");
+                getLog().info("Would have deleted "+key+" from destination because "+keysrc+" does not exist in source");
             } else {
                 boolean deletedOK = false;
                 for (int tries=0; tries<maxRetries; tries++) {
-                    if (verbose) log.info("deleting (try #"+tries+"): "+key);
+                    if (verbose) getLog().info("deleting (try #"+tries+"): "+key);
                     try {
                         deletedOK = deleteFile(options.getDestinationBucket(), key);
-                        if (verbose) log.info("successfully deleted (on try #"+tries+"): "+key);
+                        if (verbose) getLog().info("successfully deleted (on try #"+tries+"): "+key);
                         break;
 
                     } catch (Exception e) {
-                        log.error("unexpected exception deleting (try #"+tries+") "+key+": "+e);
+                        getLog().error("unexpected exception deleting (try #"+tries+") "+key+": "+e);
                     }
                     try {
                         Thread.sleep(10);
                     } catch (InterruptedException e) {
-                        log.error("interrupted while waiting to retry key: "+key);
+                        getLog().error("interrupted while waiting to retry key: "+key);
                         break;
                     }
                 }
@@ -62,14 +60,14 @@ public abstract class KeyDeleteJob extends KeyCopyJob {
             }
 
         } catch (Exception e) {
-            log.error("error deleting key: "+key+": "+e);
+            getLog().error("error deleting key: "+key+": "+e);
             if (!options.isDryRun()) context.getStats().deleteErrors.incrementAndGet();
 
         } finally {
             synchronized (notifyLock) {
                 notifyLock.notifyAll();
             }
-            if (verbose) log.info("done with "+key);
+            if (verbose) getLog().info("done with "+key);
         }
     }
 
@@ -81,11 +79,11 @@ public abstract class KeyDeleteJob extends KeyCopyJob {
         try {
             final FileSummary metadata = getMetadata(options.getSourceBucket(), keysrc);
             if (metadata == null) {
-                if (options.isVerbose()) log.info("Key not found in source bucket (will delete from destination): " + keysrc);
+                if (options.isVerbose()) getLog().info("Key not found in source bucket (will delete from destination): " + keysrc);
                 return true;
             }
         } catch (Exception e) {
-            log.warn("Error getting metadata for " + options.getSourceBucket() + "/" + keysrc + " (not deleting): " + e);
+            getLog().warn("Error getting metadata for " + options.getSourceBucket() + "/" + keysrc + " (not deleting): " + e);
         }
         return false;
     }

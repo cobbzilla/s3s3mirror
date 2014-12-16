@@ -6,6 +6,7 @@ import org.cobbzilla.s3s3mirror.MirrorContext;
 import org.cobbzilla.s3s3mirror.MirrorOptions;
 import org.cobbzilla.s3s3mirror.store.FileSummary;
 import org.cobbzilla.s3s3mirror.store.local.LocalFileStore;
+import org.slf4j.Logger;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -17,6 +18,8 @@ import java.util.List;
  */
 @Slf4j
 public class S3MultipartUploadJob extends S3KeyUploadJob {
+
+    @Override public Logger getLog() { return log; }
 
     public S3MultipartUploadJob(MirrorContext context, FileSummary summary, Object notifyLock) {
         super(context, summary, notifyLock);

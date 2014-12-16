@@ -8,9 +8,12 @@ import org.cobbzilla.s3s3mirror.MirrorContext;
 import org.cobbzilla.s3s3mirror.store.FileSummary;
 import org.cobbzilla.s3s3mirror.store.s3.S3FileListing;
 import org.cobbzilla.s3s3mirror.store.s3.S3FileStore;
+import org.slf4j.Logger;
 
 @Slf4j
 public class S3KeyDeleteJob extends KeyDeleteJob {
+
+    @Override public Logger getLog() { return log; }
 
     private final AmazonS3Client s3client;
 

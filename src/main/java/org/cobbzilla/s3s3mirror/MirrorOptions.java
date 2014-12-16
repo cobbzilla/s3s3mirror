@@ -4,6 +4,8 @@ import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.services.s3.model.*;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 import org.joda.time.DateTime;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
@@ -13,6 +15,7 @@ import java.util.Date;
 
 import static org.cobbzilla.s3s3mirror.MirrorConstants.GB;
 
+@Slf4j
 public class MirrorOptions implements AWSCredentials {
 
     public static final String S3_PROTOCOL_PREFIX = "s3://";
@@ -208,10 +211,12 @@ public class MirrorOptions implements AWSCredentials {
         final BucketAndPrefix src = new BucketAndPrefix(source, prefix);
         sourceBucket = src.bucket;
         prefix = src.prefix;
+        if (verbose) log.info("src="+src);
 
         final BucketAndPrefix dest = new BucketAndPrefix(destination, destPrefix);
         destinationBucket = dest.bucket;
         destPrefix = dest.prefix;
+        if (verbose) log.info("dest="+dest);
     }
 
     public void apply(InitiateMultipartUploadRequest request) {
@@ -234,6 +239,7 @@ public class MirrorOptions implements AWSCredentials {
     }
 
     // Consolidates logic around parsing source/destination as buckets/folders/prefixes
+    @ToString
     static class BucketAndPrefix {
         public String bucket;
         public String prefix;
@@ -249,14 +255,17 @@ public class MirrorOptions implements AWSCredentials {
         public BucketAndPrefix (String path, String pfx) {
 
             final String scrubbed = scrubS3ProtocolPrefix(path);
-            final int slashPos = scrubbed.indexOf('/');
-            final int hereDir = scrubbed.indexOf("." + sep);
+            String slash = FileStoreFactory.findSlash(path, pfx);
+            if (slash == null) slash = File.separator;
 
-            if (slashPos == 0 || scrubbed.indexOf(sep) == 0 || hereDir == 0) {
+            final int slashPos = slashPos(scrubbed);
+            final int hereDir = scrubbed.indexOf("." + slash);
+
+            if (slashPos == 0 || scrubbed.indexOf(slash) == 0 || hereDir == 0) {
                 // this is a local path since it starts with / or ./
                 if (hereDir == 0) {
                     // replace ./ with current directory name
-                    bucket = new File(System.getProperty("user.dir") + (scrubbed.length() > 2 ? sep + scrubbed.substring(2) : "")).getAbsolutePath();
+                    bucket = new File(System.getProperty("user.dir") + (scrubbed.length() > 2 ? slash + scrubbed.substring(2) : "")).getAbsolutePath();
                 } else {
                     bucket = scrubbed;
                 }
@@ -267,11 +276,11 @@ public class MirrorOptions implements AWSCredentials {
                     bucket = bucketDir.getParentFile().getAbsolutePath();
                     prefix = pfx == null || pfx.trim().isEmpty()
                             ? bucketDir.getName()
-                            : bucketDir.getName() + sep + pfx;
+                            : bucketDir.getName() + slash + pfx;
                 } else {
                     prefix = pfx;
                 }
-                if (!bucket.endsWith(sep)) bucket += sep;
+                if (!bucket.endsWith(slash)) bucket += slash;
 
             } else if (slashPos != -1) {
                 // this is for S3, in the form "bucket/prefix"
@@ -290,6 +299,12 @@ public class MirrorOptions implements AWSCredentials {
             }
 
             if (prefix != null && prefix.trim().length() == 0) prefix = null;
+        }
+
+        private int slashPos(String scrubbed) {
+            final int s1 = scrubbed.indexOf('/');
+            final int s2 = scrubbed.indexOf('\\');
+            return s1 == -1 ? s2 : (s2 == -1) ? s1 : (s1 < s2) ? s1 : s2;
         }
     }
 

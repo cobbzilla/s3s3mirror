@@ -10,6 +10,7 @@ import org.cobbzilla.s3s3mirror.MirrorOptions;
 import org.cobbzilla.s3s3mirror.MirrorStats;
 import org.cobbzilla.s3s3mirror.store.FileSummary;
 import org.cobbzilla.s3s3mirror.store.local.LocalFileStore;
+import org.slf4j.Logger;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -20,6 +21,8 @@ import java.io.OutputStream;
  */
 @Slf4j
 public class S3CopyToLocalJob extends LocalKeyCopyJob {
+
+    @Override public Logger getLog() { return log; }
 
     private AmazonS3Client client;
 

@@ -10,9 +10,12 @@ import org.cobbzilla.s3s3mirror.MirrorStats;
 import org.cobbzilla.s3s3mirror.store.FileSummary;
 import org.cobbzilla.s3s3mirror.store.s3.S3FileListing;
 import org.cobbzilla.s3s3mirror.store.s3.S3FileStore;
+import org.slf4j.Logger;
 
 @Slf4j
 public class S3KeyCopyJob extends KeyCopyJob {
+
+    @Override public Logger getLog() { return log; }
 
     protected final AmazonS3Client client;
 

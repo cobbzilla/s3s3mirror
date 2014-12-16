@@ -1,6 +1,7 @@
 package org.cobbzilla.s3s3mirror.store.s3.job;
 
 import com.amazonaws.services.s3.AmazonS3Client;
+import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.s3s3mirror.KeyDeleteJob;
 import org.cobbzilla.s3s3mirror.MirrorContext;
 import org.cobbzilla.s3s3mirror.MirrorOptions;
@@ -9,10 +10,14 @@ import org.cobbzilla.s3s3mirror.store.local.LocalFileStore;
 import org.cobbzilla.s3s3mirror.store.s3.S3ClientService;
 import org.cobbzilla.s3s3mirror.store.s3.S3FileListing;
 import org.cobbzilla.s3s3mirror.store.s3.S3FileStore;
+import org.slf4j.Logger;
 
 import java.io.File;
 
+@Slf4j
 public class LocalKeyDeleteJob extends KeyDeleteJob {
+
+    @Override public Logger getLog() { return log; }
 
     private AmazonS3Client s3client;
 

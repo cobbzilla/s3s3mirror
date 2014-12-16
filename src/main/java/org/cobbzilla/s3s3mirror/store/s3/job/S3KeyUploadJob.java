@@ -11,6 +11,7 @@ import org.cobbzilla.s3s3mirror.store.local.LocalFileStore;
 import org.cobbzilla.s3s3mirror.store.s3.S3ClientService;
 import org.cobbzilla.s3s3mirror.store.s3.S3FileListing;
 import org.cobbzilla.s3s3mirror.store.s3.S3FileStore;
+import org.slf4j.Logger;
 
 import java.io.File;
 
@@ -19,6 +20,8 @@ import java.io.File;
  */
 @Slf4j
 public class S3KeyUploadJob extends LocalKeyCopyJob {
+
+    @Override public Logger getLog() { return log; }
 
     protected AmazonS3Client s3client;
 
