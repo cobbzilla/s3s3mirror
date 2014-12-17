@@ -261,8 +261,7 @@ public class MirrorOptions implements AWSCredentials {
             final int slashPos = slashPos(scrubbed);
             final int hereDir = scrubbed.indexOf("." + slash);
 
-            if (slashPos == 0 || scrubbed.indexOf(slash) == 0 || hereDir == 0) {
-                // this is a local path since it starts with / or ./
+            if (FileStoreFactory.isLocalPath(path)) {
                 if (hereDir == 0) {
                     // replace ./ with current directory name
                     bucket = new File(System.getProperty("user.dir") + (scrubbed.length() > 2 ? slash + scrubbed.substring(2) : "")).getAbsolutePath();

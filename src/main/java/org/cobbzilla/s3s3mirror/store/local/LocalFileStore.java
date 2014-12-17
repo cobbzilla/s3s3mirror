@@ -46,16 +46,10 @@ public class LocalFileStore implements FileStore {
             if (key == null) return new File(bucket);
 
             key = stripLeadingSlash(key);
-            return new File(bucket + slash + key);
 
-        } else if (bucket.startsWith("./") || bucket.startsWith(".\\")) {
-            final String pwd = System.getProperty("user.dir");
-
-            bucket = stripTrailingSlash(bucket);
-            if (key == null) return new File(pwd + bucket.substring(2));
-
-            key = stripLeadingSlash(key);
-            return new File(pwd + bucket.substring(2) + slash + key);
+            final File file = new File(bucket + slash + key);
+            log.info("getFile("+bucket+", "+key+") returning: "+file.getAbsolutePath());
+            return file;
 
         } else {
             throw new IllegalArgumentException("Don't understand this as a directory: "+bucket);
