@@ -62,6 +62,7 @@ If a bucket name starts with `/` or `./` it will be interpreted as a directory p
     -r (--max-retries) N      : Maximum number of retries for S3 requests (default 5)
     -p (--prefix) VAL         : Only copy objects whose keys start with this prefix
     -d (--dest-prefix) VAL    : Destination prefix (replacing the one specified in --prefix, if any)
+    -R (--regex) VAL          : Only copy objects whose keys match this regular expression. Beware shell escaping mistakes.
     -e (--endpoint) VAL       : AWS endpoint to use (or set AWS_ENDPOINT in your environment)
     -X (--delete-removed)     : Delete objects from the destination bucket if they do not exist in the source bucket
     -t (--max-threads) N      : Maximum number of threads (default 100)

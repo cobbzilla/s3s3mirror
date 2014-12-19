@@ -40,7 +40,7 @@ public class S3KeyUploadJob extends LocalKeyCopyJob {
         final MirrorStats stats = context.getStats();
 
         final File srcFile = LocalFileStore.getFile(options.getSourceBucket(), summary.getKey());
-        final PutObjectRequest request = new PutObjectRequest(options.getDestinationBucket(), getKeyDestination(), srcFile);
+        final PutObjectRequest request = new PutObjectRequest(options.getDestinationBucket(), getKeyDestination().replace("\\", "/"), srcFile);
         options.apply(request);
 
         stats.s3putCount.incrementAndGet();

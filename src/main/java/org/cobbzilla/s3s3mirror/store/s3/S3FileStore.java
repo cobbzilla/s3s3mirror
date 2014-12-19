@@ -39,6 +39,7 @@ public class S3FileStore implements FileStore {
     }
 
     public static ObjectMetadata getObjectMetadata(String bucket, String key, MirrorContext context, AmazonS3Client s3Client) throws Exception {
+        log.info("getObjectMetadata("+bucket+","+key+") starting....");
         MirrorOptions options = context.getOptions();
         Exception ex = null;
         for (int tries=0; tries<options.getMaxRetries(); tries++) {
@@ -47,7 +48,9 @@ public class S3FileStore implements FileStore {
                 return s3Client.getObjectMetadata(bucket, key);
 
             } catch (AmazonS3Exception e) {
-                if (e.getStatusCode() == 404) return null;
+                ex = e;
+                if (e.getStatusCode() == 404 || e.getStatusCode() == 403) return null;
+                log.warn("Unrecognized Amazon exception: "+e);
 
             } catch (Exception e) {
                 ex = e;

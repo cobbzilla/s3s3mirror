@@ -12,6 +12,7 @@ import org.kohsuke.args4j.Option;
 
 import java.io.File;
 import java.util.Date;
+import java.util.regex.Pattern;
 
 import static org.cobbzilla.s3s3mirror.MirrorConstants.GB;
 
@@ -75,6 +76,16 @@ public class MirrorOptions implements AWSCredentials {
 
     public boolean hasDestPrefix() { return destPrefix != null && destPrefix.length() > 0; }
     public int getDestPrefixLength () { return destPrefix == null ? 0 : destPrefix.length(); }
+
+    public static final String USAGE_REGEX = "Only copy objects whose keys start match this regex";
+    public static final String OPT_REGEX = "-R";
+    public static final String LONGOPT_REGEX = "--regex";
+    @Option(name=OPT_REGEX, aliases=LONGOPT_REGEX, usage=USAGE_REGEX)
+    @Getter @Setter private String regex = null;
+
+    public boolean hasRegex () { return regex != null && regex.length() > 0; }
+    @Getter(lazy=true) private final Pattern regexPattern = initRegex();
+    private Pattern initRegex() { return hasRegex() ? Pattern.compile(getRegex()) : null; }
 
     public static final String AWS_ENDPOINT = "AWS_ENDPOINT";
 

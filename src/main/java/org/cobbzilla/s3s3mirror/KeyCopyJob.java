@@ -95,30 +95,43 @@ public abstract class KeyCopyJob implements KeyJob {
         final String key = summary.getKey();
         final boolean verbose = options.isVerbose();
 
+        if (options.hasRegex() && !options.getRegexPattern().matcher(key).matches()) {
+            if (verbose) getLog().info("shouldTransfer: Regex ("+options.getRegex()+") does not match key (), return false");
+            return false;
+        }
+
         if (options.hasCtime()) {
             final Long lastModified = summary.getLastModified();
             if (lastModified == null) {
-                if (verbose) getLog().info("No Last-Modified header for key: " + key);
+                if (verbose) getLog().info("shouldTransfer: No Last-Modified header for key: " + key);
 
             } else {
                 if (lastModified < options.getMaxAge()) {
-                    if (verbose) getLog().info("key " + key + " (lastmod=" + lastModified + ") is older than " + options.getCtime() + " (cutoff=" + options.getMaxAgeDate() + "), not copying");
+                    if (verbose) getLog().info("shouldTransfer: key " + key + " (lastmod=" + lastModified + ") is older than " + options.getCtime() + " (cutoff=" + options.getMaxAgeDate() + "), returning false");
                     return false;
                 }
             }
         }
 
         final FileSummary destination = getMetadata(options.getDestinationBucket(), getKeyDestination());
-        if (destination == null) return true;
+        if (destination == null) {
+            if (verbose) getLog().info("shouldTransfer: destination key ("+getKeyDestination()+") does not exist, returning true");
+            return true;
+        }
 
-        if (destination.getSize() != summary.getSize()) return true;
+        if (destination.getSize() != summary.getSize()) {
+            if (verbose) getLog().info("shouldTransfer: destination key ("+getKeyDestination()+") exists but size differs, returning true");
+            return true;
+        }
 
         final String destETag = destination.getETag();
         final String srcETag = summary.getETag();
-        if (destETag != null && srcETag != null && !destETag.equals(srcETag)) return true;
+        if (destETag != null && srcETag != null && !destETag.equals(srcETag)) {
+            if (verbose) getLog().info("shouldTransfer: destination key ("+getKeyDestination()+") exists but ETag differs, returning true");
+            return true;
+        }
 
-        if (verbose) getLog().info("Destination file is same as source, not copying: " + key);
-
+        if (verbose) getLog().info("Destination file is same as source, returning false for key: " + key);
         return false;
     }
 }
