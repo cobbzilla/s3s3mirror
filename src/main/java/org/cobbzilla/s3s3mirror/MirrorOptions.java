@@ -1,7 +1,6 @@
 package org.cobbzilla.s3s3mirror;
 
 import com.amazonaws.auth.AWSCredentials;
-import com.amazonaws.services.s3.model.StorageClass;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -23,6 +22,12 @@ public class MirrorOptions implements AWSCredentials {
     @Getter @Setter private String aWSSecretKey = System.getenv().get(AWS_SECRET_KEY);
 
     public boolean hasAwsKeys() { return aWSAccessKeyId != null && aWSSecretKey != null; }
+
+    public static final String USAGE_PROFILE= "Use a specific profile from your credential file (~/.aws/config)";
+    public static final String OPT_PROFILE= "-P";
+    public static final String LONGOPT_PROFILE = "--profile";
+    @Option(name=OPT_PROFILE, aliases=LONGOPT_PROFILE, usage=USAGE_PROFILE)
+    @Getter @Setter private String profile = null;
 
     public static final String USAGE_DRY_RUN = "Do not actually do anything, but show what would be done";
     public static final String OPT_DRY_RUN = "-n";

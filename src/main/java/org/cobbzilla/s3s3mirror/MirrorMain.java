@@ -81,7 +81,21 @@ public class MirrorMain {
 
     protected void parseArguments() throws Exception {
         parser.parseArgument(args);
+        
+        // for credentials, try the .aws/config file first if there is a profile specified, otherwise defer to
+        // .s3cfg before using the default .aws/config credentials 
+        // (this may attempt .aws/config twice for no reason, but maintains backward compatibility)
+        if (!options.hasAwsKeys() && options.getProfile() != null) loadAwsKeysFromAwsConfig();
+        if (!options.hasAwsKeys()) loadAwsKeysFromS3Config();
+        if (!options.hasAwsKeys()) loadAwsKeysFromAwsConfig();
         if (!options.hasAwsKeys()) {
+            throw new IllegalStateException("ENV vars not defined: " + MirrorOptions.AWS_ACCESS_KEY + " and/or " + MirrorOptions.AWS_SECRET_KEY);
+        }
+        options.initDerivedFields();
+    }
+
+    private void loadAwsKeysFromS3Config() {
+        try {
             // try to load from ~/.s3cfg
             @Cleanup BufferedReader reader = new BufferedReader(new FileReader(System.getProperty("user.home")+File.separator+".s3cfg"));
             String line;
@@ -96,11 +110,40 @@ public class MirrorMain {
                     options.setProxyPort(Integer.parseInt(line.substring(line.indexOf("=") + 1).trim()));
                 }
             }
+        } catch (Exception e) {
+            // ignore - let other credential-discovery processes have a crack
         }
-        if (!options.hasAwsKeys()) {
-            throw new IllegalStateException("ENV vars not defined: " + MirrorOptions.AWS_ACCESS_KEY + " and/or " + MirrorOptions.AWS_SECRET_KEY);
+    }
+
+    private void loadAwsKeysFromAwsConfig() {
+        try {
+            // try to load from ~/.aws/config
+            @Cleanup BufferedReader reader = new BufferedReader(new FileReader(
+                    System.getProperty("user.home") + File.separator + ".aws" + File.separator + "config"));
+            String line;
+            boolean skipSection = true;
+            while ((line = reader.readLine()) != null) {
+                line = line.trim();
+                if (line.startsWith("[")) {
+                    // if no defined profile, use '[default]' otherwise use profile with matching name
+                    if ((options.getProfile() == null && line.equals("[default]"))
+                            || (options.getProfile() != null && line.equals("[profile " + options.getProfile() + "]"))) {
+                        skipSection = false;
+                    } else {
+                        skipSection = true;
+                    }
+                    continue;
+                }
+                if (skipSection) continue;
+                if (line.startsWith("aws_access_key_id")) {
+                    options.setAWSAccessKeyId(line.substring(line.indexOf("=") + 1).trim());
+                } else if (line.startsWith("aws_secret_access_key")) {
+                    options.setAWSSecretKey(line.substring(line.indexOf("=") + 1).trim());
+                }
+            }
+        } catch (Exception e) {
+            // ignore - let other credential-discovery processes have a crack
         }
-        options.initDerivedFields();
     }
 
 }
