@@ -104,6 +104,12 @@ public class MirrorOptions implements AWSCredentials {
     public static final String LONGOPT_MAX_RETRIES = "--max-retries";
     @Option(name=OPT_MAX_RETRIES, aliases=LONGOPT_MAX_RETRIES, usage=USAGE_MAX_RETRIES)
     @Getter @Setter private int maxRetries = 5;
+    
+    public static final String USAGE_SIZE_ONLY = "Only use object size when checking for equality and ignore etags";
+    public static final String OPT_SIZE_ONLY = "-S";
+    public static final String LONGOPT_SIZE_ONLY = "--size-only";
+    @Option(name=OPT_SIZE_ONLY, aliases=LONGOPT_SIZE_ONLY, usage=USAGE_SIZE_ONLY)
+    @Getter @Setter private boolean sizeOnly = false;
 
     public static final String USAGE_CTIME = "Only copy objects whose Last-Modified date is younger than this many days. " +
             "For other time units, use these suffixes: y (years), M (months), d (days), w (weeks), h (hours), m (minutes), s (seconds)";
