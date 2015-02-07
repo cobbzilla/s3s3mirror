@@ -7,5 +7,9 @@ public class KeyFingerprint {
 
     @Getter private final long size;
     @Getter private final String etag;
+   
+    public KeyFingerprint(long size) {
+        this(size, null);
+    }
 
 }

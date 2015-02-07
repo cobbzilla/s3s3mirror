@@ -143,8 +143,18 @@ public class KeyCopyJob extends KeyJob {
     }
 
     boolean objectChanged(ObjectMetadata metadata) {
-        final KeyFingerprint sourceFingerprint = new KeyFingerprint(summary.getSize(), summary.getETag());
-        final KeyFingerprint destFingerprint = new KeyFingerprint(metadata.getContentLength(), metadata.getETag());
+        final MirrorOptions options = context.getOptions();
+        final KeyFingerprint sourceFingerprint;
+        final KeyFingerprint destFingerprint;
+        
+        if (options.isSizeOnly()) {
+            sourceFingerprint = new KeyFingerprint(summary.getSize());
+            destFingerprint = new KeyFingerprint(metadata.getContentLength());
+        } else {
+            sourceFingerprint = new KeyFingerprint(summary.getSize(), summary.getETag());
+            destFingerprint = new KeyFingerprint(metadata.getContentLength(), metadata.getETag());
+        }
+
         return !sourceFingerprint.equals(destFingerprint);
     }
 }
