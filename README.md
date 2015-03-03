@@ -12,6 +12,8 @@ An object will be copied if and only if at least one of the following holds true
 
 When copying, the source metadata and ACL lists are also copied to the destination object.
 
+Note: [the 2.0-stable branch](https://github.com/cobbzilla/s3s3mirror/tree/2.0-stable) supports copying to/from local directories.
+
 ### Motivation
 
 I started with "s3cmd sync" but found that with buckets containing many thousands of objects, it was incredibly slow
