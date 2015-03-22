@@ -1,12 +1,14 @@
 package org.cobbzilla.s3s3mirror.store.local;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.cobbzilla.s3s3mirror.store.FileListing;
 import org.cobbzilla.s3s3mirror.store.FileSummary;
 import org.cobbzilla.s3s3mirror.store.ListRequest;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
+import com.amazonaws.util.Md5Utils;
 
 public class LocalFileListing implements FileListing {
 
@@ -41,11 +43,20 @@ public class LocalFileListing implements FileListing {
             path = path.substring(bucket.length());
             if (path.length() > 0 && path.startsWith("/")) path = path.substring(1);
         }
-
-        return new FileSummary()
+        
+        return new FileSummary()               
                 .setKey(path)
+                .setETag(md5(file))
                 .setLastModified(file.lastModified())
                 .setSize(file.length());
     }
 
+    // Use the existing Md5Utils class in the AWS SDK
+    protected static String md5(File file) {
+      try {
+        return Md5Utils.md5AsBase64(file);
+      } catch(Exception e) {
+        return null;
+      }
+    }
 }
