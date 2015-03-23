@@ -7,3 +7,6 @@ dependency-reduced-pom.xml
 target
 !target/*.jar
 *.log
+.classpath
+.project
+.settings/
