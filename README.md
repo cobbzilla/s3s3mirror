@@ -27,7 +27,8 @@ Which makes me wonder if there is any way to do this faster. I'm sure there must
 
 * s3s3mirror will first look for credentials in your system environment. If variables named AWS\_ACCESS\_KEY\_ID and AWS\_SECRET\_ACCESS\_KEY are defined, then these will be used.
 * Next, it checks for a ~/.s3cfg file (which you might have for using s3cmd). If present, the access key and secret key are read from there.
-* If neither of the above is found, it will error out and refuse to run.
+* IAM Roles can be used on EC2 instances by specifying the --iam flag
+* If none of the above is found, it will error out and refuse to run.
 
 ### System Requirements
 
@@ -49,6 +50,7 @@ The above command requires that Maven 3 is installed.
     -c (--ctime) N           : Only copy objects whose Last-Modified date is younger than this many days
                                For other time units, use these suffixes: y (years), M (months), d (days), w (weeks),
                                                                          h (hours), m (minutes), s (seconds)
+    -i (--iam) : Attempt to use IAM Role if invoked on an EC2 instance
     -m (--max-connections) N  : Maximum number of connections to S3 (default 100)
     -n (--dry-run)            : Do not actually do anything, but show what would be done (default false)
     -r (--max-retries) N      : Maximum number of retries for S3 requests (default 5)

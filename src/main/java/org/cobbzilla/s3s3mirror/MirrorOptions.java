@@ -23,6 +23,12 @@ public class MirrorOptions implements AWSCredentials {
 
     public boolean hasAwsKeys() { return aWSAccessKeyId != null && aWSSecretKey != null; }
 
+    public static final String USAGE_USE_IAM_ROLE = "Use IAM role from EC2 instance, can only be used in AWS";
+    public static final String OPT_USE_IAM_ROLE = "-i";
+    public static final String LONGOPT_USE_IAM_ROLE = "--iam";
+    @Option(name=OPT_USE_IAM_ROLE, aliases=LONGOPT_USE_IAM_ROLE, usage=USAGE_USE_IAM_ROLE)
+    @Getter @Setter private boolean useIamRole = false;
+
     public static final String USAGE_PROFILE= "Use a specific profile from your credential file (~/.aws/config)";
     public static final String OPT_PROFILE= "-P";
     public static final String LONGOPT_PROFILE = "--profile";

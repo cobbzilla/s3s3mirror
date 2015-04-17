@@ -3,6 +3,7 @@ package org.cobbzilla.s3s3mirror;
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.Protocol;
 import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.auth.InstanceProfileCredentialsProvider;
 import lombok.Cleanup;
 import lombok.Getter;
 import lombok.Setter;
@@ -74,7 +75,14 @@ public class MirrorMain {
                     .withProxyHost(options.getProxyHost())
                     .withProxyPort(options.getProxyPort());
         }
-        AmazonS3Client client = new AmazonS3Client(options, clientConfiguration);
+        AmazonS3Client client = null;
+        if (options.hasAwsKeys()) {
+            client = new AmazonS3Client(options, clientConfiguration);
+        } else if (options.isUseIamRole()) {
+            client = new AmazonS3Client(new InstanceProfileCredentialsProvider(), clientConfiguration);
+        } else {
+            throw new IllegalStateException("No authenication method available, please specify IAM Role usage or AWS key and secret");
+        }        
         if (options.hasEndpoint()) client.setEndpoint(options.getEndpoint());
         return client;
     }
@@ -82,14 +90,17 @@ public class MirrorMain {
     protected void parseArguments() throws Exception {
         parser.parseArgument(args);
         
-        // for credentials, try the .aws/config file first if there is a profile specified, otherwise defer to
+        // for credentials, check for IAM role usage if not then...
+        // try the .aws/config file first if there is a profile specified, otherwise defer to
         // .s3cfg before using the default .aws/config credentials 
         // (this may attempt .aws/config twice for no reason, but maintains backward compatibility)
-        if (!options.hasAwsKeys() && options.getProfile() != null) loadAwsKeysFromAwsConfig();
-        if (!options.hasAwsKeys()) loadAwsKeysFromS3Config();
-        if (!options.hasAwsKeys()) loadAwsKeysFromAwsConfig();
+        if (options.isUseIamRole() == false) {
+            if (!options.hasAwsKeys() && options.getProfile() != null) loadAwsKeysFromAwsConfig();
+            if (!options.hasAwsKeys()) loadAwsKeysFromS3Config();
+            if (!options.hasAwsKeys()) loadAwsKeysFromAwsConfig();
+        }
         if (!options.hasAwsKeys()) {
-            throw new IllegalStateException("ENV vars not defined: " + MirrorOptions.AWS_ACCESS_KEY + " and/or " + MirrorOptions.AWS_SECRET_KEY);
+            throw new IllegalStateException("Could not find credentials, IAM Role usage not specified and ENV vars not defined: " + MirrorOptions.AWS_ACCESS_KEY + " and/or " + MirrorOptions.AWS_SECRET_KEY);
         }
         options.initDerivedFields();
     }
