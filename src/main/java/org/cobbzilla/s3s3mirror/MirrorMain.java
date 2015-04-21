@@ -98,9 +98,14 @@ public class MirrorMain {
             if (!options.hasAwsKeys() && options.getProfile() != null) loadAwsKeysFromAwsConfig();
             if (!options.hasAwsKeys()) loadAwsKeysFromS3Config();
             if (!options.hasAwsKeys()) loadAwsKeysFromAwsConfig();
-        }
-        if (!options.hasAwsKeys()) {
-            throw new IllegalStateException("Could not find credentials, IAM Role usage not specified and ENV vars not defined: " + MirrorOptions.AWS_ACCESS_KEY + " and/or " + MirrorOptions.AWS_SECRET_KEY);
+            if (!options.hasAwsKeys()) {
+                throw new IllegalStateException("Could not find credentials, IAM Role usage not specified and ENV vars not defined: " + MirrorOptions.AWS_ACCESS_KEY + " and/or " + MirrorOptions.AWS_SECRET_KEY);
+            }
+        } else {
+            InstanceProfileCredentialsProvider client = new InstanceProfileCredentialsProvider();
+            if (client.getCredentials() == null) {
+                throw new IllegalStateException("Could not find IAM Instance Profile credentials from the AWS metadata service.");
+            }
         }
         options.initDerivedFields();
     }
