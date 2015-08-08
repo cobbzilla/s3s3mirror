@@ -51,6 +51,7 @@ The above command requires that Maven 3 is installed.
                                For other time units, use these suffixes: y (years), M (months), d (days), w (weeks),
                                                                          h (hours), m (minutes), s (seconds)
     -i (--iam) : Attempt to use IAM Role if invoked on an EC2 instance
+    -P (--profile) VAL        : Use a specific profile from your credential file (~/.aws/config)
     -m (--max-connections) N  : Maximum number of connections to S3 (default 100)
     -n (--dry-run)            : Do not actually do anything, but show what would be done (default false)
     -r (--max-retries) N      : Maximum number of retries for S3 requests (default 5)
