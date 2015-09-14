@@ -32,7 +32,10 @@ Which makes me wonder if there is any way to do this faster. I'm sure there must
 
 ### System Requirements
 
-* Java 6
+* Java 6 or Java 7
+
+*Note*: currently there are problems compiling under Java 8. If you're including s3s3mirror in a larger project that uses Java8, compile
+it with Java 7 first, and compile your other code with Java 8. It should be fine to run with Java 8, just some issues with the compiler.
 
 ### Building
 
