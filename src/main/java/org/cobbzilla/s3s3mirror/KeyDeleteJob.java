@@ -79,6 +79,11 @@ public abstract class KeyDeleteJob extends KeyCopyJob {
         try {
             final FileSummary metadata = getMetadata(options.getSourceBucket(), keysrc);
             if (metadata == null) {
+                // check for regex
+                if (options.hasRegexKeep() && options.getRegexPatternKeep().matcher(keysrc).matches()) {
+                    if (options.isVerbose()) getLog().info("shouldDelete: Regex ("+options.getRegexKeep()+") matches keysrc, return false");
+                    return false;
+                }
                 if (options.isVerbose()) getLog().info("Key not found in source bucket (will delete from destination): " + keysrc);
                 return true;
             }

@@ -87,6 +87,16 @@ public class MirrorOptions implements AWSCredentials {
     @Getter(lazy=true) private final Pattern regexPattern = initRegex();
     private Pattern initRegex() { return hasRegex() ? Pattern.compile(getRegex()) : null; }
 
+    public static final String USAGE_REGEX_KEEP = "If -X is specified, keep the objects on the target whose keys match this regex";
+    public static final String OPT_REGEX_KEEP = "-K";
+    public static final String LONGOPT_REGEX_KEEP = "--regex-keep";
+    @Option(name=OPT_REGEX_KEEP, aliases=LONGOPT_REGEX_KEEP, usage=USAGE_REGEX_KEEP)
+    @Getter @Setter private String regexKeep = null;
+
+    public boolean hasRegexKeep () { return regexKeep != null && regexKeep.length() > 0; }
+    @Getter(lazy=true) private final Pattern regexPatternKeep = initRegexKeep();
+    private Pattern initRegexKeep() { return hasRegexKeep() ? Pattern.compile(getRegexKeep()) : null; }
+
     public static final String AWS_ENDPOINT = "AWS_ENDPOINT";
 
     public static final String USAGE_ENDPOINT = "AWS endpoint to use (or set "+AWS_ENDPOINT+" in your environment)";
