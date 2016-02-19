@@ -2,6 +2,7 @@ package org.cobbzilla.s3s3mirror;
 
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.AccessControlList;
+import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
@@ -52,19 +53,25 @@ public abstract class KeyJob implements Runnable {
 
     protected AccessControlList getAccessControlList(MirrorOptions options, String key) throws Exception {
         Exception ex = null;
+
         for (int tries=0; tries<options.getMaxRetries(); tries++) {
             try {
                 context.getStats().s3getCount.incrementAndGet();
                 return client.getObjectAcl(options.getSourceBucket(), key);
 
             } catch (Exception e) {
-                ex = e;
-                if (options.isVerbose()) {
-                    if (tries >= options.getMaxRetries()) {
-                        getLog().error("getObjectAcl(" + key + ") failed (try #" + tries + "), giving up");
-                        break;
-                    } else {
-                        getLog().warn("getObjectAcl("+key+") failed (try #"+tries+"), retrying...");
+                if (options.isEncrypt()) {
+                    getLog().debug("Bucket encryption enabled, unable to read ACL. Setting new ACL to no permissions.");
+                    return new AccessControlList();
+                } else {
+                    ex = e;
+                    if (options.isVerbose()) {
+                        if (tries >= options.getMaxRetries()) {
+                            getLog().error("getObjectAcl(" + key + ") failed (try #" + tries + "), giving up");
+                            break;
+                        } else {
+                            getLog().warn("getObjectAcl("+key+") failed (try #"+tries+"), retrying...");
+                        }
                     }
                 }
             }
