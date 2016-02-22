@@ -54,24 +54,29 @@ public abstract class KeyJob implements Runnable {
     protected AccessControlList getAccessControlList(MirrorOptions options, String key) throws Exception {
         Exception ex = null;
 
-        for (int tries=0; tries<options.getMaxRetries(); tries++) {
+        for (int tries=0; tries<=options.getMaxRetries(); tries++) {
             try {
                 context.getStats().s3getCount.incrementAndGet();
                 return client.getObjectAcl(options.getSourceBucket(), key);
 
             } catch (Exception e) {
-                if (options.isEncrypt()) {
-                    getLog().debug("Bucket encryption enabled, unable to read ACL. Setting new ACL to no permissions.");
+                ex = e;
+
+                if (tries >= options.getMaxRetries()) {
+                    // Annoyingly there can be two reasons for this to fail. It will fail if the IAM account
+                    // permissions are wrong, but it will also fail if we are copying an item that we don't
+                    // own ourselves. This may seem unusual, but it occurs when copying AWS Detailed Billing
+                    // objects since although they live in your bucket, the object owner is AWS.
+                    getLog().warn("Unable to obtain object ACL, copying item without ACL data.");
                     return new AccessControlList();
-                } else {
-                    ex = e;
-                    if (options.isVerbose()) {
-                        if (tries >= options.getMaxRetries()) {
-                            getLog().error("getObjectAcl(" + key + ") failed (try #" + tries + "), giving up");
-                            break;
-                        } else {
-                            getLog().warn("getObjectAcl("+key+") failed (try #"+tries+"), retrying...");
-                        }
+		}
+
+                if (options.isVerbose()) {
+                   if (tries >= options.getMaxRetries()) {
+                        getLog().warn("getObjectAcl(" + key + ") failed (try #" + tries + "), giving up.");
+			break;
+                    } else {
+                        getLog().warn("getObjectAcl("+key+") failed (try #"+tries+"), retrying...");
                     }
                 }
             }
