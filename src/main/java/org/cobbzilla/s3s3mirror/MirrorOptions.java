@@ -198,6 +198,11 @@ public class MirrorOptions implements AWSCredentials {
     @Getter private String destinationBucket;
 
     /**
+     * If object to be copied has been uploaded using multipart, there is a dash delimiter in the ETag field
+     */
+    public static final CharSequence ETAG_MULTIPART_DELIMITER = "-";
+    
+    /**
      * Current max file size allowed in amazon is 5 GB. We can try and provide this as an option too.
      */
     public static final long MAX_SINGLE_REQUEST_UPLOAD_FILE_SIZE = 5 * GB;
