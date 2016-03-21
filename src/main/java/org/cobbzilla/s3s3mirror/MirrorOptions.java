@@ -202,12 +202,13 @@ public class MirrorOptions implements AWSCredentials {
      */
     public static final CharSequence ETAG_MULTIPART_DELIMITER = "-";
     public static final long MB_CHUNKSIZE = 1 * MB;
+    public static final long MINIMUM_CHUNK_SIZE = 5 * MB;
 
     /**
      * Current max file size allowed in amazon is 5 GB. We can try and provide this as an option too.
      */
-    public static final long MAX_SINGLE_REQUEST_UPLOAD_FILE_SIZE = 5 * GB;
-    private static final long DEFAULT_PART_SIZE = 4 * GB;
+    public static final long MAX_SINGLE_REQUEST_UPLOAD_FILE_SIZE = 8 * MB;
+    private static final long DEFAULT_PART_SIZE = 8 * MB;
     private static final String MULTI_PART_UPLOAD_SIZE_USAGE = "The upload size (in bytes) of each part uploaded as part of a multipart request " +
             "for files that are greater than the max allowed file size of " + MAX_SINGLE_REQUEST_UPLOAD_FILE_SIZE + " bytes ("+(MAX_SINGLE_REQUEST_UPLOAD_FILE_SIZE/GB)+"GB). " +
             "Defaults to " + DEFAULT_PART_SIZE + " bytes ("+(DEFAULT_PART_SIZE/GB)+"GB).";

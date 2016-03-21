@@ -66,13 +66,13 @@ public class KeyCopyJob extends KeyJob {
         for (int tries = 0; tries < maxRetries; tries++) {
             if (verbose) log.info("copying (try #" + tries + "): " + key + " to: " + keydest);
             final CopyObjectRequest request = new CopyObjectRequest(options.getSourceBucket(), key, options.getDestinationBucket(), keydest);
-            
+
             request.setStorageClass(StorageClass.valueOf(options.getStorageClass()));
-            
+
             if (options.isEncrypt()) {
 				request.putCustomRequestHeader("x-amz-server-side-encryption", "AES256");
 			}
-            
+
             request.setNewObjectMetadata(sourceMetadata);
             if (options.isCrossAccountCopy()) {
                 request.setCannedAccessControlList(CannedAccessControlList.BucketOwnerFullControl);
@@ -133,9 +133,11 @@ public class KeyCopyJob extends KeyJob {
             return false;
         }
 
-        if (summary.getSize() > MirrorOptions.MAX_SINGLE_REQUEST_UPLOAD_FILE_SIZE) {
-            return metadata.getContentLength() != summary.getSize();
-        }
+        // That's not needed anymore, as the chunk size tries to remain the same as source
+        // if (summary.getSize() > MirrorOptions.MAX_SINGLE_REQUEST_UPLOAD_FILE_SIZE) {
+        //     return metadata.getContentLength() != summary.getSize();
+        // }
+
         final boolean objectChanged = objectChanged(metadata);
         if (verbose && !objectChanged) log.info("Destination file is same as source, not copying: "+ key);
 
@@ -146,7 +148,7 @@ public class KeyCopyJob extends KeyJob {
         final MirrorOptions options = context.getOptions();
         final KeyFingerprint sourceFingerprint;
         final KeyFingerprint destFingerprint;
-        
+
         if (options.isSizeOnly()) {
             sourceFingerprint = new KeyFingerprint(summary.getSize());
             destFingerprint = new KeyFingerprint(metadata.getContentLength());

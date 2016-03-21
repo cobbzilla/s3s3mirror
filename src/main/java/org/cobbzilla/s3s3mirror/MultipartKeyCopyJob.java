@@ -27,25 +27,26 @@ public class MultipartKeyCopyJob extends KeyCopyJob {
         }
         InitiateMultipartUploadRequest initiateRequest = new InitiateMultipartUploadRequest(targetBucketName, keydest)
                 .withObjectMetadata(sourceMetadata);
-
         if (options.isCrossAccountCopy()) {
             initiateRequest.withCannedACL(CannedAccessControlList.BucketOwnerFullControl);
         } else {
             initiateRequest.withAccessControlList(objectAcl);
         }
-
         InitiateMultipartUploadResult initResult = client.initiateMultipartUpload(initiateRequest);
 
         String eTag = summary.getETag();
-        int eTagChunks = Integer.parseInt(eTag.substring(eTag.indexOf(MirrorOptions.ETAG_MULTIPART_DELIMITER.toString(),eTag.length() - 1)));
-        long minChunksize = (long) Math.ceil(objectSize/eTagChunks);
-        int mbChunks = (int) Math.ceil(minChunksize/MirrorOptions.MB_CHUNKSIZE);
+        int eTagChunks = Integer.parseInt(eTag.substring(eTag.indexOf(MirrorOptions.ETAG_MULTIPART_DELIMITER.toString())+1,eTag.length()));
+        long minChunksize = (long) Math.ceil((float)objectSize/eTagChunks);
+        int mbChunks = (int) Math.ceil((float)minChunksize/MirrorOptions.MB_CHUNKSIZE);
         long chunkSize = mbChunks * MirrorOptions.MB_CHUNKSIZE;
-
         long partSize = options.getUploadPartSize();
 
         if (chunkSize < partSize) {
             partSize = chunkSize;
+        }
+
+        if (chunkSize < MirrorOptions.MINIMUM_CHUNK_SIZE) {
+            partSize = MirrorOptions.MINIMUM_CHUNK_SIZE;
         }
 
         long bytePosition = 0;
@@ -103,8 +104,9 @@ public class MultipartKeyCopyJob extends KeyCopyJob {
         return eTags;
     }
 
-    @Override
-    boolean objectChanged(ObjectMetadata metadata) {
-        return summary.getSize() != metadata.getContentLength();
-    }
+    // We do not need this override, the multipart eTag should match now
+    // @Override
+    // boolean objectChanged(ObjectMetadata metadata) {
+    //     return summary.getSize() != metadata.getContentLength();
+    // }
 }
