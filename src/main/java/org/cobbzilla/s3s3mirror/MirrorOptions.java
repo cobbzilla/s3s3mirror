@@ -46,24 +46,24 @@ public class MirrorOptions implements AWSCredentials {
     public static final String LONGOPT_VERBOSE = "--verbose";
     @Option(name=OPT_VERBOSE, aliases=LONGOPT_VERBOSE, usage=USAGE_VERBOSE)
     @Getter @Setter private boolean verbose = false;
-    
+
     public static final String USAGE_SSL = "Use SSL for all S3 api operations";
     public static final String OPT_SSL = "-s";
     public static final String LONGOPT_SSL = "--ssl";
     @Option(name=OPT_SSL, aliases=LONGOPT_SSL, usage=USAGE_SSL)
     @Getter @Setter private boolean ssl = false;
-    
+
     public static final String USAGE_ENCRYPT = "Enable AWS managed server-side encryption";
     public static final String OPT_ENCRYPT = "-E";
     public static final String LONGOPT_ENCRYPT = "--server-side-encryption";
     @Option(name=OPT_ENCRYPT, aliases=LONGOPT_ENCRYPT, usage=USAGE_ENCRYPT)
     @Getter @Setter private boolean encrypt = false;
-    
+
     public static final String USAGE_STORAGE_CLASS = "Specify the S3 StorageClass (Standard | ReducedRedundancy)";
     public static final String OPT_STORAGE_CLASS = "-l";
     public static final String LONGOPT_STORAGE_CLASS = "--storage-class";
     @Option(name=OPT_STORAGE_CLASS, aliases=LONGOPT_STORAGE_CLASS, usage=USAGE_STORAGE_CLASS)
-    @Getter @Setter private String storageClass = "Standard"; 
+    @Getter @Setter private String storageClass = "Standard";
 
     public static final String USAGE_PREFIX = "Only copy objects whose keys start with this prefix";
     public static final String OPT_PREFIX = "-p";
@@ -110,7 +110,7 @@ public class MirrorOptions implements AWSCredentials {
     public static final String LONGOPT_MAX_RETRIES = "--max-retries";
     @Option(name=OPT_MAX_RETRIES, aliases=LONGOPT_MAX_RETRIES, usage=USAGE_MAX_RETRIES)
     @Getter @Setter private int maxRetries = 5;
-    
+
     public static final String USAGE_SIZE_ONLY = "Only use object size when checking for equality and ignore etags";
     public static final String OPT_SIZE_ONLY = "-S";
     public static final String LONGOPT_SIZE_ONLY = "--size-only";
@@ -201,7 +201,8 @@ public class MirrorOptions implements AWSCredentials {
      * If object to be copied has been uploaded using multipart, there is a dash delimiter in the ETag field
      */
     public static final CharSequence ETAG_MULTIPART_DELIMITER = "-";
-    
+    public static final long MB_CHUNKSIZE = 1 * MB;
+
     /**
      * Current max file size allowed in amazon is 5 GB. We can try and provide this as an option too.
      */

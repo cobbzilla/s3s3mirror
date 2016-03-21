@@ -36,7 +36,18 @@ public class MultipartKeyCopyJob extends KeyCopyJob {
 
         InitiateMultipartUploadResult initResult = client.initiateMultipartUpload(initiateRequest);
 
+        String eTag = summary.getETag();
+        int eTagChunks = Integer.parseInt(eTag.substring(eTag.indexOf(MirrorOptions.ETAG_MULTIPART_DELIMITER.toString(),eTag.length() - 1)));
+        long minChunksize = (long) Math.ceil(objectSize/eTagChunks);
+        int mbChunks = (int) Math.ceil(minChunksize/MirrorOptions.MB_CHUNKSIZE);
+        long chunkSize = mbChunks * MirrorOptions.MB_CHUNKSIZE;
+
         long partSize = options.getUploadPartSize();
+
+        if (chunkSize < partSize) {
+            partSize = chunkSize;
+        }
+
         long bytePosition = 0;
 
         for (int i = 1; bytePosition < objectSize; i++) {
