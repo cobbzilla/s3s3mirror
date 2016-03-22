@@ -9,4 +9,8 @@ public class MirrorConstants {
     public static final long PB = TB * 1024L;
     public static final long EB = PB * 1024L;
 
+    public static final long KiB = 1000L;
+    public static final long MiB = KiB * 1000L;
+    public static final long GiB = MiB * 1000L;
+
 }

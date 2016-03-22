@@ -7,6 +7,8 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.cobbzilla.s3s3mirror.MirrorConstants.*;
+
 @Slf4j
 public class MultipartKeyCopyJob extends KeyCopyJob {
 
@@ -36,7 +38,111 @@ public class MultipartKeyCopyJob extends KeyCopyJob {
 
         InitiateMultipartUploadResult initResult = client.initiateMultipartUpload(initiateRequest);
 
-        long partSize = options.getUploadPartSize();
+        final long optionsUploadPartSize = options.getUploadPartSize();
+        long partSize = MirrorOptions.MINIMUM_PART_SIZE;
+        
+        if (optionsUploadPartSize == MirrorOptions.DEFAULT_PART_SIZE ) {
+            final String eTag = summary.getETag();
+            final int eTagParts = Integer.parseInt(eTag.substring(eTag.indexOf(MirrorOptions.ETAG_MULTIPART_DELIMITER.toString()) + 1,eTag.length()));
+
+            long computedPartSize = MirrorConstants.MB;
+            long minPartSize = objectSize;
+            long maxPartSize = MirrorOptions.MAX_SINGLE_REQUEST_UPLOAD_FILE_SIZE;
+
+            if (eTagParts > 1) {
+                minPartSize = (long) Math.ceil((float)objectSize/eTagParts);
+                maxPartSize = (long) Math.floor((float)objectSize/(eTagParts - 1));
+            } 
+
+            // Detect using standard MB and the power of 2
+            if (computedPartSize < minPartSize || computedPartSize > maxPartSize) {
+                computedPartSize = MirrorConstants.MB;
+                while (computedPartSize < minPartSize) {
+                    computedPartSize *= 2;
+                }
+            }
+
+            // Detect using MiB notation and the power of 2
+            if (computedPartSize < minPartSize || computedPartSize > maxPartSize) {
+                computedPartSize = 1 * MirrorConstants.MiB;
+                while (computedPartSize < minPartSize) {
+                    computedPartSize *= 2;
+                }
+            }
+
+            // Detect other special cases like s3n and Aspera
+            if (computedPartSize < minPartSize || computedPartSize > maxPartSize) {
+                for (int i = 0; i < MirrorOptions.SPECIAL_PART_SIZES.length; i++) {
+                    computedPartSize = MirrorOptions.SPECIAL_PART_SIZES[i];
+                    if (computedPartSize >= MirrorOptions.SPECIAL_PART_SIZES[i]) {
+                        break;
+                    }
+                }
+            }
+
+            // Detect if using 100MB increments
+            if (computedPartSize < minPartSize || computedPartSize > maxPartSize) {
+                computedPartSize = 100 * MirrorConstants.MB;
+                while (computedPartSize < minPartSize) {
+                    computedPartSize ++;
+                }
+            }
+
+            // Detect if using 25MB increments up to 1GB
+            if (computedPartSize < minPartSize || computedPartSize > maxPartSize) {
+                computedPartSize = 25 * MirrorConstants.MB;
+                while (computedPartSize < minPartSize || computedPartSize < 1 * MirrorConstants.GB) {
+                    computedPartSize ++;
+                }
+            }
+
+            // Detect if using 10MB increments up to 1GB
+            if (computedPartSize < minPartSize || computedPartSize > maxPartSize) {
+                computedPartSize = 10 * MirrorConstants.MB;
+                while (computedPartSize < minPartSize || computedPartSize < 1 * MirrorConstants.GB) {
+                    computedPartSize ++;
+                }
+            }
+
+            // Detect if using 5MB increments up to 1GB
+            if (computedPartSize < minPartSize || computedPartSize > maxPartSize) {
+                computedPartSize = 5 * MirrorConstants.MB;
+                while (computedPartSize < minPartSize || computedPartSize < 1 * MirrorConstants.GB) {
+                    computedPartSize ++;
+                }
+            }
+
+            // Detect if using 1MB increments up to 100MB
+            if (computedPartSize < minPartSize || computedPartSize > maxPartSize) {
+                computedPartSize = 1 * MirrorConstants.MB;
+                while (computedPartSize < minPartSize || computedPartSize < 100 * MirrorConstants.MB) {
+                    computedPartSize ++;
+                }
+            }
+
+            partSize = computedPartSize;
+
+            if (computedPartSize > maxPartSize) {
+                if (options.isVerbose()) {
+                    log.info("Could not automatically determine part size for " + summary.getKey() + ", reverting to " + optionsUploadPartSize/MB + "MB" );
+                }
+                partSize = optionsUploadPartSize;
+            }
+
+            if (computedPartSize < MirrorOptions.MINIMUM_PART_SIZE) {
+                if (options.isVerbose()) {
+                    log.info("Part size of " + computedPartSize/MB + "MB for " + summary.getKey() + " is greater than AWS minimum of " + MirrorOptions.MINIMUM_PART_SIZE/MB + "MB");
+                }
+                partSize = MirrorOptions.MINIMUM_PART_SIZE;
+            }
+
+        } else {
+            if (options.isVerbose()) {
+                log.info("Using cli override part size of " + optionsUploadPartSize/MB + "MB for " + summary.getKey());
+            }
+            partSize = optionsUploadPartSize;
+        }
+
         long bytePosition = 0;
 
         for (int i = 1; bytePosition < objectSize; i++) {
@@ -92,8 +198,4 @@ public class MultipartKeyCopyJob extends KeyCopyJob {
         return eTags;
     }
 
-    @Override
-    boolean objectChanged(ObjectMetadata metadata) {
-        return summary.getSize() != metadata.getContentLength();
-    }
 }

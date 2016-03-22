@@ -7,6 +7,7 @@ import lombok.Setter;
 import org.joda.time.DateTime;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
+import java.util.Arrays;
 
 import java.util.Date;
 
@@ -201,10 +202,21 @@ public class MirrorOptions implements AWSCredentials {
      * Current max file size allowed in amazon is 5 GB. We can try and provide this as an option too.
      */
     public static final long MAX_SINGLE_REQUEST_UPLOAD_FILE_SIZE = 5 * GB;
-    private static final long DEFAULT_PART_SIZE = 4 * GB;
+    public static final long MINIMUM_PART_SIZE = 5 * MB;
+    public static final CharSequence ETAG_MULTIPART_DELIMITER = "-";
+    public static final long DEFAULT_PART_SIZE = 8 * MB;
+    // s3n and Aspera uses special part sizes (this array is not sorted anywhere, so order it!)
+    public static final long[] SPECIAL_PART_SIZES = {
+        7 * MB,
+        67108536,
+        134217696,
+        268434144,
+        268435392,
+        536869740
+    };
     private static final String MULTI_PART_UPLOAD_SIZE_USAGE = "The upload size (in bytes) of each part uploaded as part of a multipart request " +
             "for files that are greater than the max allowed file size of " + MAX_SINGLE_REQUEST_UPLOAD_FILE_SIZE + " bytes ("+(MAX_SINGLE_REQUEST_UPLOAD_FILE_SIZE/GB)+"GB). " +
-            "Defaults to " + DEFAULT_PART_SIZE + " bytes ("+(DEFAULT_PART_SIZE/GB)+"GB).";
+            "Defaults to " + DEFAULT_PART_SIZE + " bytes ("+(DEFAULT_PART_SIZE/MB)+"MB).";
     private static final String OPT_MULTI_PART_UPLOAD_SIZE = "-u";
     private static final String LONGOPT_MULTI_PART_UPLOAD_SIZE = "--upload-part-size";
     @Option(name=OPT_MULTI_PART_UPLOAD_SIZE, aliases=LONGOPT_MULTI_PART_UPLOAD_SIZE, usage=MULTI_PART_UPLOAD_SIZE_USAGE)

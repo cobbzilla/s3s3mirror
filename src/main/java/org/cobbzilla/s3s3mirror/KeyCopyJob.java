@@ -133,9 +133,6 @@ public class KeyCopyJob extends KeyJob {
             return false;
         }
 
-        if (summary.getSize() > MirrorOptions.MAX_SINGLE_REQUEST_UPLOAD_FILE_SIZE) {
-            return metadata.getContentLength() != summary.getSize();
-        }
         final boolean objectChanged = objectChanged(metadata);
         if (verbose && !objectChanged) log.info("Destination file is same as source, not copying: "+ key);
 
