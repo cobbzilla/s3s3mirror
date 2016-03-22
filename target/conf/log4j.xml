@@ -12,7 +12,7 @@
     </appender>
 
     <appender name="file" class="org.apache.log4j.FileAppender">
-        <param name="File" value="/var/log/s3s3mirror.log" />
+        <param name="File" value="/tmp/s3s3mirror.log" />
         <param name="Append" value="true" />
         <layout class="org.apache.log4j.PatternLayout">
           <param name="ConversionPattern" value="%t %-5p %c{2} - %m%n"/>
@@ -32,3 +32,4 @@
     </root>
 
 </log4j:configuration>
+
