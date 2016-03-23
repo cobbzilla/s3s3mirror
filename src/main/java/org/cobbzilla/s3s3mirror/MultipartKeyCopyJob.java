@@ -86,7 +86,7 @@ public class MultipartKeyCopyJob extends KeyCopyJob {
             if (computedPartSize < minPartSize || computedPartSize > maxPartSize) {
                 computedPartSize = 100 * MirrorConstants.MB;
                 while (computedPartSize < minPartSize) {
-                    computedPartSize ++;
+                    computedPartSize += 100 * MirrorConstants.MB;
                 }
             }
 
@@ -94,7 +94,7 @@ public class MultipartKeyCopyJob extends KeyCopyJob {
             if (computedPartSize < minPartSize || computedPartSize > maxPartSize) {
                 computedPartSize = 25 * MirrorConstants.MB;
                 while (computedPartSize < minPartSize || computedPartSize < 1 * MirrorConstants.GB) {
-                    computedPartSize ++;
+                    computedPartSize += 25 * MirrorConstants.MB;
                 }
             }
 
@@ -102,7 +102,7 @@ public class MultipartKeyCopyJob extends KeyCopyJob {
             if (computedPartSize < minPartSize || computedPartSize > maxPartSize) {
                 computedPartSize = 10 * MirrorConstants.MB;
                 while (computedPartSize < minPartSize || computedPartSize < 1 * MirrorConstants.GB) {
-                    computedPartSize ++;
+                    computedPartSize += 10 * MirrorConstants.MB;
                 }
             }
 
@@ -110,7 +110,7 @@ public class MultipartKeyCopyJob extends KeyCopyJob {
             if (computedPartSize < minPartSize || computedPartSize > maxPartSize) {
                 computedPartSize = 5 * MirrorConstants.MB;
                 while (computedPartSize < minPartSize || computedPartSize < 1 * MirrorConstants.GB) {
-                    computedPartSize ++;
+                    computedPartSize += 5 * MirrorConstants.MB;
                 }
             }
 
@@ -118,7 +118,7 @@ public class MultipartKeyCopyJob extends KeyCopyJob {
             if (computedPartSize < minPartSize || computedPartSize > maxPartSize) {
                 computedPartSize = 1 * MirrorConstants.MB;
                 while (computedPartSize < minPartSize || computedPartSize < 100 * MirrorConstants.MB) {
-                    computedPartSize ++;
+                    computedPartSize += 1 * MirrorConstants.MB;
                 }
             }
 
