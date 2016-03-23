@@ -72,10 +72,12 @@ public class MultipartKeyCopyJob extends KeyCopyJob {
 
             // Detect other special cases like s3n and Aspera
             if (computedPartSize < minPartSize || computedPartSize > maxPartSize) {
+                computedPartSize = 1 * MirrorConstants.MB;
                 for (int i = 0; i < MirrorOptions.SPECIAL_PART_SIZES.length; i++) {
-                    computedPartSize = MirrorOptions.SPECIAL_PART_SIZES[i];
                     if (computedPartSize >= MirrorOptions.SPECIAL_PART_SIZES[i]) {
                         break;
+                    } else {
+                        computedPartSize = MirrorOptions.SPECIAL_PART_SIZES[i];
                     }
                 }
             }
