@@ -1,5 +1,6 @@
 package org.cobbzilla.s3s3mirror.store.local.job;
 
+import com.amazonaws.services.s3.AmazonS3Client;
 import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.s3s3mirror.KeyCopyJob;
 import org.cobbzilla.s3s3mirror.MirrorContext;
@@ -13,8 +14,8 @@ public abstract class LocalKeyCopyJob extends KeyCopyJob {
 
     @Override public Logger getLog() { return log; }
 
-    public LocalKeyCopyJob(MirrorContext context, FileSummary summary, Object notifyLock) {
-        super(context, summary, notifyLock);
+    public LocalKeyCopyJob(AmazonS3Client client, MirrorContext context, FileSummary summary, Object notifyLock) {
+        super(client, context, summary, notifyLock);
     }
 
     @Override

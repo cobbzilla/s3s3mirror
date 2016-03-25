@@ -10,6 +10,7 @@ import org.cobbzilla.s3s3mirror.MirrorOptions;
 import org.cobbzilla.s3s3mirror.MirrorStats;
 import org.cobbzilla.s3s3mirror.store.FileSummary;
 import org.cobbzilla.s3s3mirror.store.local.LocalFileStore;
+import org.cobbzilla.s3s3mirror.store.local.job.LocalKeyCopyJob;
 import org.slf4j.Logger;
 
 import java.io.File;
@@ -24,11 +25,9 @@ public class S3CopyToLocalJob extends LocalKeyCopyJob {
 
     @Override public Logger getLog() { return log; }
 
-    private AmazonS3Client client;
-
     public S3CopyToLocalJob(AmazonS3Client client, MirrorContext context, FileSummary summary, Object notifyLock) {
-        super(context, summary, notifyLock);
-        this.client = client;
+        super(client, context, summary, notifyLock);
+        this.s3client = client;
     }
 
     @Override
@@ -44,7 +43,7 @@ public class S3CopyToLocalJob extends LocalKeyCopyJob {
 
         @Cleanup final OutputStream out = new FileOutputStream(destFile);
         stats.s3getCount.incrementAndGet();
-        IOUtils.copy(client.getObject(request).getObjectContent(), out);
+        IOUtils.copy(s3client.getObject(request).getObjectContent(), out);
         stats.bytesCopied.addAndGet(destFile.length());
 
         return true;

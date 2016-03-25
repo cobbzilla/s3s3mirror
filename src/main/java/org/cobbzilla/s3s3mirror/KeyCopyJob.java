@@ -1,20 +1,25 @@
 package org.cobbzilla.s3s3mirror;
 
+import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.model.ObjectMetadata;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.s3s3mirror.store.FileSummary;
+import org.cobbzilla.s3s3mirror.store.s3.S3FileStore;
 import org.slf4j.Logger;
 
 @Slf4j
 public abstract class KeyCopyJob implements KeyJob {
 
+    protected AmazonS3Client s3client;
     protected final MirrorContext context;
     protected final FileSummary summary;
     protected final Object notifyLock;
 
     @Getter protected String keyDestination;
 
-    protected KeyCopyJob(MirrorContext context, FileSummary summary, Object notifyLock) {
+    protected KeyCopyJob(AmazonS3Client s3client, MirrorContext context, FileSummary summary, Object notifyLock) {
+        this.s3client = s3client;
         this.context = context;
         this.summary = summary;
         this.notifyLock = notifyLock;
@@ -31,6 +36,14 @@ public abstract class KeyCopyJob implements KeyJob {
             keyDestination = keyDestination.substring(options.getPrefixLength());
             keyDestination = options.getDestPrefix() + keyDestination;
         }
+        // If the destination is not local, ensure any windows separators are changed to S3 separators
+        if (!FileStoreFactory.isLocalPath(options.getDestination())) {
+            keyDestination = keyDestination.replace("\\", "/");
+        }
+    }
+
+    protected ObjectMetadata getObjectMetadata(String bucket, String key) throws Exception {
+        return S3FileStore.getObjectMetadata(bucket, key, context, s3client);
     }
 
     protected abstract FileSummary getMetadata(String bucket, String key) throws Exception;
@@ -126,12 +139,34 @@ public abstract class KeyCopyJob implements KeyJob {
 
         final String destETag = destination.getETag();
         final String srcETag = summary.getETag();
+        boolean etagMatch = true;
         if (destETag != null && srcETag != null && !destETag.equals(srcETag)) {
-            if (verbose) getLog().info("shouldTransfer: destination key ("+getKeyDestination()+") exists but ETag differs, returning true");
-            return true;
+            if (verbose) getLog().info("shouldTransfer: destination key ("+getKeyDestination()+") exists but ETag differs, checking SHA-256");
+            etagMatch = false;
         }
 
-        if (verbose) getLog().info("Destination file is same as source, returning false for key: " + key);
-        return false;
+        String destSha256 = destination.getSha256();
+        String srcSha256 = summary.getSha256();
+        if (srcSha256 != null && srcSha256.equals(Sha256.CHECK_OBJECT_METADATA)) {
+            srcSha256 = getObjectMetadata(options.getSourceBucket(), summary.getKey()).getUserMetadata().get(Sha256.S3S3_SHA256);
+        }
+        boolean shaMatch = true;
+        if (destSha256 == null) {
+            if (verbose) getLog().info("shouldTransfer: destination key ("+getKeyDestination()+") exists but has no SHA-256 hash");
+            shaMatch = false;
+        } else if (srcSha256 == null) {
+            if (verbose) getLog().info("shouldTransfer: destination key ("+getKeyDestination()+") exists and has SHA-256 hash, but source does not");
+            shaMatch = false;
+        } else if (!destSha256.equals(srcSha256)) {
+            if (verbose) getLog().info("shouldTransfer: destination key ("+getKeyDestination()+") exists but SHA-256 hash differs");
+            shaMatch = false;
+        }
+        if (etagMatch || shaMatch) {
+            if (verbose) getLog().info("shouldTransfer: destination key ("+getKeyDestination()+") exists and one of ETag/SHA-256 matches, return false for key: "+key);
+            return false;
+        }
+
+        if (verbose) getLog().info("shouldTransfer: destination key ("+getKeyDestination()+") differs from source, return true for key: "+key);
+        return true;
     }
 }

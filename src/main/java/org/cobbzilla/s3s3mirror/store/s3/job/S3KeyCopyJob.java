@@ -1,7 +1,10 @@
 package org.cobbzilla.s3s3mirror.store.s3.job;
 
 import com.amazonaws.services.s3.AmazonS3Client;
-import com.amazonaws.services.s3.model.*;
+import com.amazonaws.services.s3.model.AccessControlList;
+import com.amazonaws.services.s3.model.CannedAccessControlList;
+import com.amazonaws.services.s3.model.CopyObjectRequest;
+import com.amazonaws.services.s3.model.ObjectMetadata;
 import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.s3s3mirror.KeyCopyJob;
 import org.cobbzilla.s3s3mirror.MirrorContext;
@@ -9,7 +12,6 @@ import org.cobbzilla.s3s3mirror.MirrorOptions;
 import org.cobbzilla.s3s3mirror.MirrorStats;
 import org.cobbzilla.s3s3mirror.store.FileSummary;
 import org.cobbzilla.s3s3mirror.store.s3.S3FileListing;
-import org.cobbzilla.s3s3mirror.store.s3.S3FileStore;
 import org.slf4j.Logger;
 
 @Slf4j
@@ -17,25 +19,18 @@ public class S3KeyCopyJob extends KeyCopyJob {
 
     @Override public Logger getLog() { return log; }
 
-    protected final AmazonS3Client client;
-
     public S3KeyCopyJob(AmazonS3Client client, MirrorContext context, FileSummary summary, Object notifyLock) {
-        super(context, summary, notifyLock);
-        this.client = client;
+        super(client, context, summary, notifyLock);
     }
 
     @Override public String toString() { return summary.getKey(); }
-
-    protected ObjectMetadata getObjectMetadata(String bucket, String key) throws Exception {
-        return S3FileStore.getObjectMetadata(bucket, key, context, client);
-    }
 
     protected AccessControlList getAccessControlList(MirrorOptions options, String key) throws Exception {
         Exception ex = null;
         for (int tries=0; tries<options.getMaxRetries(); tries++) {
             try {
                 context.getStats().s3getCount.incrementAndGet();
-                return client.getObjectAcl(options.getSourceBucket(), key);
+                return s3client.getObjectAcl(options.getSourceBucket(), key);
 
             } catch (Exception e) {
                 ex = e;
@@ -80,7 +75,7 @@ public class S3KeyCopyJob extends KeyCopyJob {
         }
 
         stats.s3copyCount.incrementAndGet();
-        client.copyObject(request);
+        s3client.copyObject(request);
         stats.bytesCopied.addAndGet(sourceMetadata.getContentLength());
         return true;
     }

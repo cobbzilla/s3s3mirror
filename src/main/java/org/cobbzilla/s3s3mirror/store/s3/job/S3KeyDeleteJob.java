@@ -15,11 +15,8 @@ public class S3KeyDeleteJob extends KeyDeleteJob {
 
     @Override public Logger getLog() { return log; }
 
-    private final AmazonS3Client s3client;
-
     public S3KeyDeleteJob(AmazonS3Client client, MirrorContext context, FileSummary summary, Object notifyLock) {
-        super(context, summary, notifyLock);
-        this.s3client = client;
+        super(client, context, summary, notifyLock);
     }
 
     @Override protected boolean deleteFile(String bucket, String key) {

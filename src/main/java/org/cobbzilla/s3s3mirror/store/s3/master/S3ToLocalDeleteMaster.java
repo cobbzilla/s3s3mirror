@@ -5,7 +5,7 @@ import org.cobbzilla.s3s3mirror.MirrorContext;
 import org.cobbzilla.s3s3mirror.store.FileStore;
 import org.cobbzilla.s3s3mirror.store.FileSummary;
 import org.cobbzilla.s3s3mirror.store.local.LocalFileStore;
-import org.cobbzilla.s3s3mirror.store.s3.job.LocalKeyDeleteJob;
+import org.cobbzilla.s3s3mirror.store.local.job.LocalKeyDeleteJob;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -22,6 +22,6 @@ public class S3ToLocalDeleteMaster extends S3DeleteMaster {
     @Override public FileStore getListSource() { return LocalFileStore.instance; }
 
     @Override protected KeyDeleteJob getTask(FileSummary summary) {
-        return new LocalKeyDeleteJob(context, summary, notifyLock);
+        return new LocalKeyDeleteJob(s3client, context, summary, notifyLock);
     }
 }

@@ -1,5 +1,6 @@
 package org.cobbzilla.s3s3mirror.store.s3.job;
 
+import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.*;
 import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.s3s3mirror.MirrorContext;
@@ -21,8 +22,8 @@ public class S3MultipartUploadJob extends S3KeyUploadJob {
 
     @Override public Logger getLog() { return log; }
 
-    public S3MultipartUploadJob(MirrorContext context, FileSummary summary, Object notifyLock) {
-        super(context, summary, notifyLock);
+    public S3MultipartUploadJob(AmazonS3Client client, MirrorContext context, FileSummary summary, Object notifyLock) {
+        super(client, context, summary, notifyLock);
     }
 
     @Override

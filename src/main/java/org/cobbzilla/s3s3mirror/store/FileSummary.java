@@ -2,12 +2,14 @@ package org.cobbzilla.s3s3mirror.store;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 
-@NoArgsConstructor @AllArgsConstructor @Accessors(chain=true)
+@AllArgsConstructor @Accessors(chain=true)
 public class FileSummary {
+
+    public FileSummary() {
+    }
 
     /** a unique string that identifies this file */
     @Getter @Setter private String key;
@@ -20,5 +22,13 @@ public class FileSummary {
 
     /** an ETag associated with the file, or null if no ETag is present */
     @Getter @Setter private String eTag;
+
+    /** the SHA-256 hash of the local file, or the value found in remote S3 ObjectMetadata with the key s3s3-sha256 */
+    @Getter @Setter private String sha256;
+
+    /** if this represents a symlink, this is the path to the link target, or null if not a symlink */
+    @Getter @Setter private String linkTarget;
+
+    public boolean isSymlink() { return linkTarget != null; }
 
 }

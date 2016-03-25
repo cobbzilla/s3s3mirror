@@ -1,13 +1,12 @@
 package org.cobbzilla.s3s3mirror;
 
 import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.model.ObjectMetadata;
 import lombok.Cleanup;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.math.RandomUtils;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileOutputStream;
+import java.io.*;
 import java.util.List;
 
 class TestFile {
@@ -44,16 +43,19 @@ class TestFile {
                 stuffToCleanup.add(new S3Asset(MirrorTest.DESTINATION, key));
                 break;
         }
+
+        final ObjectMetadata metadata = Sha256.getS3MetadataWithHash(testFile.file);
+        @Cleanup final InputStream in = new FileInputStream(testFile.file);
         switch (copy) {
             case SOURCE:
-                client.putObject(MirrorTest.SOURCE, key, testFile.file);
+                client.putObject(MirrorTest.SOURCE, key, in, metadata);
                 break;
             case DEST:
-                client.putObject(MirrorTest.DESTINATION, key, testFile.file);
+                client.putObject(MirrorTest.DESTINATION, key, in, metadata);
                 break;
             case SOURCE_AND_DEST:
-                client.putObject(MirrorTest.SOURCE, key, testFile.file);
-                client.putObject(MirrorTest.DESTINATION, key, testFile.file);
+                client.putObject(MirrorTest.SOURCE, key, in, metadata);
+                client.putObject(MirrorTest.DESTINATION, key, in, metadata);
                 break;
         }
         return testFile;

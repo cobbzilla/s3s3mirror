@@ -16,32 +16,32 @@ public class S3ToLocalTest extends MirrorTestBase {
         if (!checkEnvs()) return;
         final String key = "testSimpleCopy_"+random(10);
         final String[] args = {OPT_VERBOSE, OPT_PREFIX, key, SOURCE, localDir.getAbsolutePath() };
-
-        testSimpleCopyInternal(key, args);
+        main = new MirrorMain(args);
+        final TestFile testFile = createTestFile(key, TestFile.Copy.SOURCE, TestFile.Clean.SOURCE);
+        runMirror(args);
     }
 
     @Test
     public void testSimpleCopyWithInlinePrefix () throws Exception {
         if (!checkEnvs()) return;
-        final String key = "testSimpleCopyWithInlinePrefix_"+random(10);
+        String key = "testSimpleCopyWithInlinePrefix_"+random(10);
         final String[] args = {OPT_VERBOSE, SOURCE + "/" + key, localDir.getAbsolutePath()};
 
-        testSimpleCopyInternal(key, args);
-    }
-
-    private void testSimpleCopyInternal(String key, String[] args) throws Exception {
-
         main = new MirrorMain(args);
-        main.init();
-
         final TestFile testFile = createTestFile(key, TestFile.Copy.SOURCE, TestFile.Clean.SOURCE);
 
-        main.run();
-
+        runMirror(args);
         assertEquals(testFile.data.length(), main.getContext().getStats().bytesCopied.get());
 
-        final File destFile = new File(localDir.getAbsolutePath() + File.separator + testFile.key);
-        assertEquals(testFile.data.length(), destFile.length());
+        // ensure second copy recognizes that SHA-256 hashes are the same
+        runMirror(args);
+        assertEquals(0, main.getContext().getStats().bytesCopied.get());
+    }
+
+    private void runMirror(String[] args) throws Exception {
+        main = new MirrorMain(args);
+        main.init();
+        main.run();
     }
 
     @Test

@@ -1,15 +1,20 @@
 package org.cobbzilla.s3s3mirror.store.local;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-
+import com.amazonaws.util.Md5Utils;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FileUtils;
+import org.cobbzilla.s3s3mirror.Sha256;
 import org.cobbzilla.s3s3mirror.store.FileListing;
 import org.cobbzilla.s3s3mirror.store.FileSummary;
 import org.cobbzilla.s3s3mirror.store.ListRequest;
 
-import com.amazonaws.util.Md5Utils;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.List;
 
+@Slf4j
 public class LocalFileListing implements FileListing {
 
     private ListRequest request;
@@ -43,12 +48,23 @@ public class LocalFileListing implements FileListing {
             path = path.substring(bucket.length());
             if (path.length() > 0 && path.startsWith("/")) path = path.substring(1);
         }
-        
-        return new FileSummary()               
+
+        String linkTarget = null;
+        try {
+            if (FileUtils.isSymlink(file)) {
+                linkTarget = Files.readSymbolicLink(file.toPath()).toString();
+            }
+        } catch (IOException e) {
+            log.warn("buildSummary: error handling symlink (assuming regular file): "+e);
+        }
+
+        return new FileSummary()
                 .setKey(path)
                 .setETag(md5(file))
+                .setSha256(Sha256.hash(file))
                 .setLastModified(file.lastModified())
-                .setSize(file.length());
+                .setSize(file.length())
+                .setLinkTarget(linkTarget);
     }
 
     // Use the existing Md5Utils class in the AWS SDK

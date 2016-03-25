@@ -4,7 +4,7 @@ import org.cobbzilla.s3s3mirror.KeyJob;
 import org.cobbzilla.s3s3mirror.MirrorContext;
 import org.cobbzilla.s3s3mirror.MirrorOptions;
 import org.cobbzilla.s3s3mirror.store.FileSummary;
-import org.cobbzilla.s3s3mirror.store.s3.job.LocalS3KeyDeleteJob;
+import org.cobbzilla.s3s3mirror.store.local.job.LocalS3KeyDeleteJob;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;

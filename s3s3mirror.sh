@@ -3,11 +3,11 @@
 
 THISDIR=$(cd "$(dirname $0)" && pwd)
 
-VERSION=2.0.2
+VERSION=2.1.0
 JARFILE="${THISDIR}/target/s3s3mirror-${VERSION}-SNAPSHOT.jar"
 VERSION_ARG="-Ds3s3mirror.version=${VERSION}"
 
-TEMPFILE=$(tempfile)
+TEMPFILE=$(mktemp /tmp/$(basename 0).XXXXXXX)
 
 DEBUG=$1
 if [ "${DEBUG}" = "--debug" ] ; then

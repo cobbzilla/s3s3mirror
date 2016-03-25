@@ -20,6 +20,9 @@ public class MirrorTestBase {
     public static final String SOURCE_ENV_VAR = "S3S3_TEST_SOURCE";
     public static final String DEST_ENV_VAR = "S3S3_TEST_DEST";
 
+    public static final String LOCAL_TO_S3_DESTINATION_ENV_VAR = "LOCAL_TO_S3S3_TEST_DEST";
+    public static final String LOCAL_TO_S3_DESTINATION = System.getenv(LOCAL_TO_S3_DESTINATION_ENV_VAR);
+
     public static final String SOURCE = System.getenv(SOURCE_ENV_VAR);
     public static final String DESTINATION = System.getenv(DEST_ENV_VAR);
 

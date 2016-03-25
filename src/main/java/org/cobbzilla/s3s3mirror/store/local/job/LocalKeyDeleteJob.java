@@ -7,7 +7,6 @@ import org.cobbzilla.s3s3mirror.MirrorContext;
 import org.cobbzilla.s3s3mirror.MirrorOptions;
 import org.cobbzilla.s3s3mirror.store.FileSummary;
 import org.cobbzilla.s3s3mirror.store.local.LocalFileStore;
-import org.cobbzilla.s3s3mirror.store.s3.S3ClientService;
 import org.cobbzilla.s3s3mirror.store.s3.S3FileListing;
 import org.cobbzilla.s3s3mirror.store.s3.S3FileStore;
 import org.slf4j.Logger;
@@ -19,16 +18,12 @@ public class LocalKeyDeleteJob extends KeyDeleteJob {
 
     @Override public Logger getLog() { return log; }
 
-    private AmazonS3Client s3client;
-
-    public LocalKeyDeleteJob(MirrorContext context, FileSummary summary, Object notifyLock) {
-        super(context, summary, notifyLock);
-        s3client = S3ClientService.getS3Client(context.getOptions());
+    public LocalKeyDeleteJob(AmazonS3Client client, MirrorContext context, FileSummary summary, Object notifyLock) {
+        super(client, context, summary, notifyLock);
     }
 
     @Override protected FileSummary getMetadata(String bucket, String key) throws Exception {
         return S3FileListing.buildSummary(key, S3FileStore.getObjectMetadata(bucket, key, context, s3client));
-//        return LocalFileListing.buildSummary(LocalFileStore.getFile(bucket, key));
     }
 
     @Override protected boolean deleteFile(String bucket, String key) throws Exception {

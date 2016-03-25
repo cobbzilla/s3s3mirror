@@ -6,6 +6,7 @@ import com.amazonaws.services.s3.model.S3ObjectSummary;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
+import org.cobbzilla.s3s3mirror.Sha256;
 import org.cobbzilla.s3s3mirror.store.FileListing;
 import org.cobbzilla.s3s3mirror.store.FileSummary;
 
@@ -31,7 +32,11 @@ public class S3FileListing implements FileListing {
     @Override public boolean hasMore() { return listing.isTruncated(); }
 
     public static FileSummary buildSummary(S3ObjectSummary s) {
-        final FileSummary summary = new FileSummary().setKey(s.getKey()).setSize(s.getSize()).setETag(s.getETag());
+        final FileSummary summary = new FileSummary()
+                .setKey(s.getKey())
+                .setSize(s.getSize())
+                .setSha256(Sha256.CHECK_OBJECT_METADATA) // key-lister does not have access to meta-data
+                .setETag(s.getETag());
         final Date mtime = s.getLastModified();
         if (mtime != null) summary.setLastModified(mtime.getTime());
         return summary;
@@ -44,6 +49,7 @@ public class S3FileListing implements FileListing {
                 .setKey(key)
                 .setSize(metadata.getContentLength())
                 .setLastModified(metadata.getLastModified().getTime())
+                .setSha256(metadata.getUserMetadata().get(Sha256.S3S3_SHA256))
                 .setETag(metadata.getETag());
 
     }

@@ -42,7 +42,7 @@ public class MultipartKeyCopyJob extends S3KeyCopyJob {
             initiateRequest.withAccessControlList(getAccessControlList(options, key));
         }
 
-        final InitiateMultipartUploadResult initResult = client.initiateMultipartUpload(initiateRequest);
+        final InitiateMultipartUploadResult initResult = s3client.initiateMultipartUpload(initiateRequest);
 
         long partSize = options.getUploadPartSize();
         long bytePosition = 0;
@@ -67,13 +67,13 @@ public class MultipartKeyCopyJob extends S3KeyCopyJob {
                 try {
                     if (options.isVerbose()) log.info("try :" + tries);
                     context.getStats().s3copyCount.incrementAndGet();
-                    CopyPartResult copyPartResult = client.copyPart(copyRequest);
+                    CopyPartResult copyPartResult = s3client.copyPart(copyRequest);
                     copyResponses.add(copyPartResult);
                     if (options.isVerbose()) log.info("completed " + infoMessage);
                     break;
                 } catch (Exception e) {
                     if (tries == maxPartRetries) {
-                        client.abortMultipartUpload(new AbortMultipartUploadRequest(
+                        s3client.abortMultipartUpload(new AbortMultipartUploadRequest(
                                 destBucket, keydest, initResult.getUploadId()));
                         log.error("Exception while doing multipart copy", e);
                         return false;
@@ -86,7 +86,7 @@ public class MultipartKeyCopyJob extends S3KeyCopyJob {
 
         final CompleteMultipartUploadRequest completeRequest
                 = new CompleteMultipartUploadRequest(destBucket, keydest, initResult.getUploadId(), getETags(copyResponses));
-        client.completeMultipartUpload(completeRequest);
+        s3client.completeMultipartUpload(completeRequest);
 
         if (options.isVerbose()) log.info("completed multipart request for : " + key);
 

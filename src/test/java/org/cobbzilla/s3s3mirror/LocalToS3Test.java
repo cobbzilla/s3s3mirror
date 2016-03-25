@@ -14,34 +14,42 @@ public class LocalToS3Test extends MirrorTestBase {
     public void testSimpleCopy () throws Exception {
         if (!checkEnvs()) return;
         final String key = "testSimpleCopy_"+random(10);
-        final String[] args = {OPT_VERBOSE, localDir.getAbsolutePath(), DESTINATION};
+        final String[] args = {OPT_VERBOSE, localDir.getAbsolutePath(), LOCAL_TO_S3_DESTINATION};
 
-        testSimpleCopyInternal(key, args);
+        testSimpleCopyInternal(args, createLocalTestFile(key));
     }
 
     @Test
     public void testSimpleCopyWithPrefix () throws Exception {
         if (!checkEnvs()) return;
         final String key = "testSimpleCopyWithPrefix_"+random(10);
-        final String[] args = {OPT_VERBOSE, OPT_PREFIX, key, localDir.getAbsolutePath(), DESTINATION };
+        final String[] args = {OPT_VERBOSE, OPT_PREFIX, key, localDir.getAbsolutePath(), LOCAL_TO_S3_DESTINATION};
 
-        testSimpleCopyInternal(key, args);
+        final File localTestFile = createLocalTestFile(key);
+
+        testSimpleCopyInternal(args, localTestFile);
+        assertEquals(1, main.getContext().getStats().objectsCopied.get());
+        assertEquals(localTestFile.length(), main.getContext().getStats().bytesUploaded.get());
+
+        // ensure a duplicate operation does not re-upload the same content
+        testSimpleCopyInternal(args, localTestFile);
+        assertEquals(0, main.getContext().getStats().objectsPut.get());
+        assertEquals(0, main.getContext().getStats().bytesUploaded.get());
     }
 
-    private void testSimpleCopyInternal(String key, String[] args) throws Exception {
+    private MirrorMain testSimpleCopyInternal(String[] args, File localFile) throws Exception {
 
         main = new MirrorMain(args);
         main.init();
-
-        final File testFile = createLocalTestFile(key);
-
         main.run();
 
-        assertEquals(1, main.getContext().getStats().objectsCopied.get());
-        assertEquals(testFile.length(), main.getContext().getStats().bytesUploaded.get());
-
-        final ObjectMetadata metadata = getS3Client().getObjectMetadata(DESTINATION, key);
-        assertEquals(testFile.length(), metadata.getContentLength());
+        final MirrorOptions options = main.getOptions();
+        final String destinationBucket = options.getDestinationBucket();
+        final String destPrefix = options.getDestPrefix() == null ? "" : options.getDestPrefix();
+        final String key = destPrefix + localFile.getName();
+        final ObjectMetadata metadata = getS3Client().getObjectMetadata(destinationBucket, key);
+        assertEquals(localFile.length(), metadata.getContentLength());
+        return main;
     }
 
     @Test
@@ -49,7 +57,7 @@ public class LocalToS3Test extends MirrorTestBase {
         if (!checkEnvs()) return;
         final String key = "testSimpleCopyWithDestPrefix_"+random(10);
         final String destKey = "dest_testSimpleCopyWithDestPrefix_"+random(10);
-        final String[] args = {OPT_PREFIX, key, OPT_DEST_PREFIX, destKey, localDir.getAbsolutePath(), DESTINATION};
+        final String[] args = {OPT_PREFIX, key, OPT_DEST_PREFIX, destKey, localDir.getAbsolutePath(), LOCAL_TO_S3_DESTINATION};
         testSimpleCopyWithDestPrefixInternal(key, destKey, args);
     }
 
@@ -58,7 +66,7 @@ public class LocalToS3Test extends MirrorTestBase {
         if (!checkEnvs()) return;
         final String key = "testSimpleCopyWithInlineDestPrefix_"+random(10);
         final String destKey = "dest_testSimpleCopyWithInlineDestPrefix_"+random(10);
-        final String[] args = {localDir.getAbsolutePath()+"/"+key, OPT_DEST_PREFIX, destKey, DESTINATION};
+        final String[] args = {localDir.getAbsolutePath()+"/"+key, OPT_DEST_PREFIX, destKey, LOCAL_TO_S3_DESTINATION};
         testSimpleCopyWithDestPrefixInternal(key, destKey, args);
     }
 
@@ -73,7 +81,7 @@ public class LocalToS3Test extends MirrorTestBase {
         assertEquals(1, main.getContext().getStats().objectsCopied.get());
         assertEquals(testFile.length(), main.getContext().getStats().bytesUploaded.get());
 
-        final ObjectMetadata metadata = getS3Client().getObjectMetadata(DESTINATION, destKey);
+        final ObjectMetadata metadata = getS3Client().getObjectMetadata(LOCAL_TO_S3_DESTINATION, destKey);
         assertEquals(testFile.length(), metadata.getContentLength());
     }
 

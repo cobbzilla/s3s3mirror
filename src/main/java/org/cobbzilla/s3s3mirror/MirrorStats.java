@@ -60,7 +60,7 @@ public class MirrorStats {
                 + "copy+upload rate: "+copyRate+"/minute\n"
                 + "delete rate: "+deleteRate+"/minute\n"
                 + "bytes copied: "+formatBytes(bytesCopied.get())+"\n"
-                + "bytes copied: "+formatBytes(bytesUploaded.get())+"\n"
+                + "bytes uploaded: "+formatBytes(bytesUploaded.get())+"\n"
                 + "GET operations: "+s3getCount+"\n"
                 + "COPY operations: "+ s3copyCount+"\n"
                 + "PUT operations: "+ s3putCount+"\n"
