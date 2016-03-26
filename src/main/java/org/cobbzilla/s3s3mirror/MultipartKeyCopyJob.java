@@ -62,22 +62,12 @@ public class MultipartKeyCopyJob extends KeyCopyJob {
                 }
             }
 
-            // Detect using MiB notation and the power of 2
-            if (computedPartSize < minPartSize || computedPartSize > maxPartSize) {
-                computedPartSize = 1 * MirrorConstants.MiB;
-                while (computedPartSize < minPartSize) {
-                    computedPartSize *= 2;
-                }
-            }
-
             // Detect other special cases like s3n and Aspera
             if (computedPartSize < minPartSize || computedPartSize > maxPartSize) {
-                computedPartSize = 1 * MirrorConstants.MB;
                 for (int i = 0; i < MirrorOptions.SPECIAL_PART_SIZES.length; i++) {
-                    if (computedPartSize >= MirrorOptions.SPECIAL_PART_SIZES[i]) {
+                    computedPartSize = MirrorOptions.SPECIAL_PART_SIZES[i];
+                    if (computedPartSize >= maxPartSize) {
                         break;
-                    } else {
-                        computedPartSize = MirrorOptions.SPECIAL_PART_SIZES[i];
                     }
                 }
             }
@@ -93,7 +83,7 @@ public class MultipartKeyCopyJob extends KeyCopyJob {
             // Detect if using 25MB increments up to 1GB
             if (computedPartSize < minPartSize || computedPartSize > maxPartSize) {
                 computedPartSize = 25 * MirrorConstants.MB;
-                while (computedPartSize < minPartSize || computedPartSize < 1 * MirrorConstants.GB) {
+                while (computedPartSize < minPartSize && computedPartSize < 1 * MirrorConstants.GB) {
                     computedPartSize += 25 * MirrorConstants.MB;
                 }
             }
@@ -101,7 +91,7 @@ public class MultipartKeyCopyJob extends KeyCopyJob {
             // Detect if using 10MB increments up to 1GB
             if (computedPartSize < minPartSize || computedPartSize > maxPartSize) {
                 computedPartSize = 10 * MirrorConstants.MB;
-                while (computedPartSize < minPartSize || computedPartSize < 1 * MirrorConstants.GB) {
+                while (computedPartSize < minPartSize && computedPartSize < 1 * MirrorConstants.GB) {
                     computedPartSize += 10 * MirrorConstants.MB;
                 }
             }
@@ -109,16 +99,8 @@ public class MultipartKeyCopyJob extends KeyCopyJob {
             // Detect if using 5MB increments up to 1GB
             if (computedPartSize < minPartSize || computedPartSize > maxPartSize) {
                 computedPartSize = 5 * MirrorConstants.MB;
-                while (computedPartSize < minPartSize || computedPartSize < 1 * MirrorConstants.GB) {
+                while (computedPartSize < minPartSize && computedPartSize < 1 * MirrorConstants.GB) {
                     computedPartSize += 5 * MirrorConstants.MB;
-                }
-            }
-
-            // Detect if using 1MB increments up to 100MB
-            if (computedPartSize < minPartSize || computedPartSize > maxPartSize) {
-                computedPartSize = 1 * MirrorConstants.MB;
-                while (computedPartSize < minPartSize || computedPartSize < 100 * MirrorConstants.MB) {
-                    computedPartSize += 1 * MirrorConstants.MB;
                 }
             }
 
