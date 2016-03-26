@@ -207,6 +207,7 @@ public class MirrorOptions implements AWSCredentials {
     public static final long DEFAULT_PART_SIZE = 8 * MB;
     // s3n and Aspera uses special part sizes (this array is not sorted anywhere, so order it!)
     public static final long[] SPECIAL_PART_SIZES = {
+        5 * MB,
         7 * MB,
         67108536,
         134217696,
