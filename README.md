@@ -48,6 +48,16 @@ The above command requires that Maven 3 is installed.
 
     s3s3mirror.sh [options] <source-bucket>[/src-prefix/path/...] <destination-bucket>[/dest-prefix/path/...]
 
+### Versions
+
+The 1.x branch (currently master) has been in use by the most number of people and is the most battle tested.
+
+The 2.x branch supports copying between S3 and any local filesystem. It has seen heavy use and performs well, but is not as widely used as the 1.x branch.
+
+**In the near future, the 1.x branch will offshoot from master, and the 2.x branch will be merged into master.** There are a handful of features
+on the 1.x branch that have not yet been ported to 2.x. If you can live without them, I encourage you to use the 2.x branch. If you really need them,
+I encourage you to port them to the 2.x branch, if you have the ability.
+
 ### Options
 
     -c (--ctime) N           : Only copy objects whose Last-Modified date is younger than this many days
@@ -116,4 +126,4 @@ BAD IDEA: If copying within a single bucket, do *not* put the destination below 
     s3s3mirror.sh -p foo -d foo/subfolder source source
 *This might cause recursion and raise your AWS bill unnecessarily*
 
-###### If you've enjoyed using s3s3mirror and are looking for a warm-fuzzy feeling, consider dropping a little somethin' into my [tip jar](https://www.gittip.com/cobbzilla)
+###### If you've enjoyed using s3s3mirror and are looking for a warm-fuzzy feeling, consider dropping a little somethin' into my [tip jar](https://cobbzilla.org/tipjar.html)
