@@ -77,10 +77,9 @@ public class MirrorMain {
                     .withProxyPort(options.getProxyPort());
         }
         AmazonS3Client client = null;
-        if(System.getenv("AWS_SECURITY_TOKEN") != null)
-        {
-        BasicSessionCredentials basicSessionCredentials = new BasicSessionCredentials(System.getenv("AWS_ACCESS_KEY_ID"), System.getenv("AWS_SECRET_ACCESS_KEY"), System.getenv("AWS_SECURITY_TOKEN"));
-        client = new AmazonS3Client(basicSessionCredentials, clientConfiguration);
+        if(System.getenv("AWS_SECURITY_TOKEN") != null) {
+            BasicSessionCredentials basicSessionCredentials = new BasicSessionCredentials(System.getenv("AWS_ACCESS_KEY_ID"), System.getenv("AWS_SECRET_ACCESS_KEY"), System.getenv("AWS_SECURITY_TOKEN"));
+            client = new AmazonS3Client(basicSessionCredentials, clientConfiguration);
         } else if (options.hasAwsKeys()) {
             client = new AmazonS3Client(options, clientConfiguration);
         } else if (options.isUseIamRole()) {
