@@ -1,6 +1,5 @@
 package org.cobbzilla.s3s3mirror;
 
-import com.amazonaws.auth.BasicSessionCredentials;
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.Protocol;
 import com.amazonaws.services.s3.AmazonS3Client;
