@@ -4,6 +4,7 @@ import com.amazonaws.ClientConfiguration;
 import com.amazonaws.Protocol;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.auth.InstanceProfileCredentialsProvider;
+import com.amazonaws.auth.BasicSessionCredentials;
 import lombok.Cleanup;
 import lombok.Getter;
 import lombok.Setter;
@@ -76,7 +77,10 @@ public class MirrorMain {
                     .withProxyPort(options.getProxyPort());
         }
         AmazonS3Client client = null;
-        if (options.hasAwsKeys()) {
+        if(System.getenv("AWS_SECURITY_TOKEN") != null) {
+            BasicSessionCredentials basicSessionCredentials = new BasicSessionCredentials(System.getenv("AWS_ACCESS_KEY_ID"), System.getenv("AWS_SECRET_ACCESS_KEY"), System.getenv("AWS_SECURITY_TOKEN"));
+            client = new AmazonS3Client(basicSessionCredentials, clientConfiguration);
+        } else if (options.hasAwsKeys()) {
             client = new AmazonS3Client(options, clientConfiguration);
         } else if (options.isUseIamRole()) {
             client = new AmazonS3Client(new InstanceProfileCredentialsProvider(), clientConfiguration);
