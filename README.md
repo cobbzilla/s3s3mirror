@@ -128,18 +128,14 @@ BAD IDEA: If copying within a single bucket, do *not* put the destination below 
     s3s3mirror.sh -p foo -d foo/subfolder source source
 *This might cause recursion and raise your AWS bill unnecessarily*
 
-MORE BAD IDEAS: Use caution with the `-X` / `--delete-removed` flag. If run from the wrong directory, you will likely *delete everything* on the destination.
+MORE BAD IDEAS: Use caution with the `-X` / `--delete-removed` flag. If the source is empty, you will *delete everything* on the destination.
 
-For example, if /some/empty/dir and some-empty-bucket in fact totally empty, then these commands will cause you much pain:
+For example, if both /some/empty/dir and some-empty-bucket are empty:
 
-    s3s3mirror.sh -X /some/empty/dir some-bucket
-    s3s3mirror.sh -X some-empty-bucket ./
-    s3s3mirror.sh -X some-empty-bucket /
+    s3s3mirror.sh -X /some/empty/dir some-bucket-with-stuff  # delete everything in some-bucket-with-stuff
+    s3s3mirror.sh -X some-empty-bucket ./                    # delete everything in your current directory
+    s3s3mirror.sh -X some-empty-bucket /                     # DO NOT DO THIS! It will delete everything on your local system!
 
-* The first will delete everything in some-bucket
-* The second will delete everything in your current directory
-* **The third will delete everything on your local system!**
-
-When in doubt, use the `-n` / `--dry-run` option first to ensure that s3s3mirror behave as you expect.
+When in doubt, use the `-n` / `--dry-run` option first to ensure that s3s3mirror will behave as you expect.
 
 ###### If you've enjoyed using s3s3mirror and are looking for a warm-fuzzy feeling, consider dropping a little somethin' into my [tip jar](https://cobbzilla.org/tipjar.html)
