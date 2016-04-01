@@ -50,7 +50,13 @@ The above command requires that Maven 3 is installed.
 
     s3s3mirror.sh [options] <source-bucket>[/src-prefix/path/...] <destination-bucket>[/dest-prefix/path/...]
 
-If a bucket name starts with `/` or `./` it will be interpreted as a directory path on the local system. On Windows, use `\` or `.\`  
+If a bucket name starts with `/` or `./` it will be interpreted as a directory path on the local system. On Windows, use `\` or `.\`
+
+If the source is the special value `.-` then the list of files to upload to S3 will be read from stdin, one file per line.
+If the files read from stdin are not absolute paths, they will be considered as relative to the current directory.
+If the files read in *are* absolute paths, you probably don't want this: the uploaded file on S3 will be stored under
+`destination-bucket/dest-prefix/absolute-path-to-file` which is probably not what you want. Strip off absolute-path prefixes from the
+files before feeding them to s3s3mirror on stdin.
 
 ### Versions
 

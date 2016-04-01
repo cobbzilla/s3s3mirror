@@ -3,7 +3,7 @@
 
 THISDIR=$(cd "$(dirname $0)" && pwd)
 
-VERSION=2.1.0
+VERSION=2.1.1
 JARFILE="${THISDIR}/target/s3s3mirror-${VERSION}-SNAPSHOT.jar"
 VERSION_ARG="-Ds3s3mirror.version=${VERSION}"
 
@@ -13,7 +13,7 @@ DEBUG=$1
 if [ "${DEBUG}" = "--debug" ] ; then
   # Run in debug mode
   shift   # remove --debug from options
-  java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005 ${VERSION_ARG} -jar "${JARFILE}" "$@" 2>&1 | tee $TEMPFILE
+  java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=6005 ${VERSION_ARG} -jar "${JARFILE}" "$@" 2>&1 | tee $TEMPFILE
 
 else
   # Run in regular mode

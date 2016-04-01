@@ -21,6 +21,7 @@ public class MirrorOptions implements AWSCredentials {
 
     public static final String S3_PROTOCOL_PREFIX = "s3://";
     public static final String sep = File.separator;
+    public static final String READ_FILES_FROM_STDIN = ".-";
 
     public static final String AWS_ACCESS_KEY = "AWS_ACCESS_KEY_ID";
     public static final String AWS_SECRET_KEY = "AWS_SECRET_ACCESS_KEY";
@@ -273,24 +274,29 @@ public class MirrorOptions implements AWSCredentials {
             final int hereDir = scrubbed.indexOf("." + slash);
 
             if (FileStoreFactory.isLocalPath(path)) {
-                if (hereDir == 0) {
-                    // replace ./ with current directory name
-                    bucket = new File(System.getProperty("user.dir") + (scrubbed.length() > 2 ? slash + scrubbed.substring(2) : "")).getAbsolutePath();
+                if (path.equals(READ_FILES_FROM_STDIN)) {
+                    bucket = path;
+                    prefix = null;
                 } else {
-                    bucket = scrubbed;
-                }
+                    if (hereDir == 0) {
+                        // replace ./ with current directory name
+                        bucket = new File(System.getProperty("user.dir") + (scrubbed.length() > 2 ? slash + scrubbed.substring(2) : "")).getAbsolutePath();
+                    } else {
+                        bucket = scrubbed;
+                    }
 
-                // if the path is not to a dir, then assume anything after the last / should be pre-pended to the prefix
-                final File bucketDir = new File(bucket);
-                if (!bucketDir.isDirectory()) {
-                    bucket = bucketDir.getParentFile().getAbsolutePath();
-                    prefix = pfx == null || pfx.trim().isEmpty()
-                            ? bucketDir.getName()
-                            : bucketDir.getName() + slash + pfx;
-                } else {
-                    prefix = pfx;
+                    // if the path is not to a dir, then assume anything after the last / should be pre-pended to the prefix
+                    final File bucketDir = new File(bucket);
+                    if (!bucketDir.isDirectory()) {
+                        bucket = bucketDir.getParentFile().getAbsolutePath();
+                        prefix = pfx == null || pfx.trim().isEmpty()
+                                ? bucketDir.getName()
+                                : bucketDir.getName() + slash + pfx;
+                    } else {
+                        prefix = pfx;
+                    }
+                    if (!bucket.endsWith(slash)) bucket += slash;
                 }
-                if (!bucket.endsWith(slash)) bucket += slash;
 
             } else if (slashPos != -1) {
                 // this is for S3, in the form "bucket/prefix"

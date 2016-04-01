@@ -3,6 +3,7 @@ package org.cobbzilla.s3s3mirror.store.local;
 import com.amazonaws.util.Md5Utils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
+import org.cobbzilla.s3s3mirror.MirrorOptions;
 import org.cobbzilla.s3s3mirror.Sha256;
 import org.cobbzilla.s3s3mirror.store.FileListing;
 import org.cobbzilla.s3s3mirror.store.FileSummary;
@@ -12,19 +13,24 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 @Slf4j
 public class LocalFileListing implements FileListing {
 
     private ListRequest request;
-    private LocalFileIterator iterator;
+    private Iterator<File> iterator;
 
     public LocalFileListing(ListRequest request) {
         this.request = request;
-        final File base = LocalFileStore.getFile(request.getBucket());
-        if (!base.isDirectory()) throw new IllegalArgumentException("not a directory: "+base.getAbsolutePath());
-        iterator = new LocalFileIterator(base, request.getPrefix());
+        if (request.getBucket().equals(MirrorOptions.READ_FILES_FROM_STDIN)) {
+            iterator = new StdinFileIterator();
+        } else {
+            final File base = LocalFileStore.getFile(request.getBucket());
+            if (!base.isDirectory()) throw new IllegalArgumentException("not a directory: " + base.getAbsolutePath());
+            iterator = new LocalFileIterator(base, request.getPrefix());
+        }
     }
 
     @Override public List<FileSummary> getFileSummaries() {
@@ -43,10 +49,17 @@ public class LocalFileListing implements FileListing {
     public static FileSummary buildSummary(File file, String bucket) {
         if (!file.exists()) return null;
 
-        String path = file.getAbsolutePath();
-        if (path.startsWith(bucket)) {
-            path = path.substring(bucket.length());
-            if (path.length() > 0 && path.startsWith("/")) path = path.substring(1);
+        final boolean isStdin = bucket.equals(MirrorOptions.READ_FILES_FROM_STDIN);
+
+        String path;
+        if (isStdin) {
+            path = file.getPath();
+        } else {
+            path = file.getAbsolutePath();
+            if (path.startsWith(bucket)) {
+                path = path.substring(bucket.length());
+                if (path.length() > 0 && path.startsWith("/")) path = path.substring(1);
+            }
         }
 
         String linkTarget = null;

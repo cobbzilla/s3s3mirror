@@ -12,7 +12,8 @@ public class FileStoreFactory {
     public static boolean isLocalPath(String path) {
         return path.startsWith(".\\") || path.startsWith("./")
                 || path.startsWith("/") || path.startsWith("\\")
-                || (path.indexOf(':') == 1 && path.charAt(2) == '\\');
+                || (path.indexOf(':') == 1 && path.charAt(2) == '\\')
+                || path.equals(MirrorOptions.READ_FILES_FROM_STDIN);
     }
 
     public static KeyMaster buildCopyMaster(MirrorContext context, BlockingQueue<Runnable> workQueue, ThreadPoolExecutor executor) {

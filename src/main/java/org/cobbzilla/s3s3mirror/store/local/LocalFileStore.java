@@ -2,6 +2,7 @@ package org.cobbzilla.s3s3mirror.store.local;
 
 import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.s3s3mirror.FileStoreFactory;
+import org.cobbzilla.s3s3mirror.MirrorOptions;
 import org.cobbzilla.s3s3mirror.MirrorStats;
 import org.cobbzilla.s3s3mirror.store.FileListing;
 import org.cobbzilla.s3s3mirror.store.FileStore;
@@ -37,6 +38,9 @@ public class LocalFileStore implements FileStore {
     }
 
     public static File getFile(String bucket, String key) {
+
+        if (bucket.equals(MirrorOptions.READ_FILES_FROM_STDIN)) return new File(key);
+
         String slash = FileStoreFactory.findSlash(bucket, key);
         if (slash == null) slash = File.separator;
 
