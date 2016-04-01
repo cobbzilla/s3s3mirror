@@ -61,6 +61,7 @@ public abstract class KeyCopyJob implements KeyJob {
                 getLog().info("Would have copied " + key + " to destination: " + getKeyDestination());
             } else {
                 if (tryCopy()) {
+                    if (options.isVerbose()) getLog().info("successfully copied "+key+" -> "+getKeyDestination());
                     context.getStats().objectsCopied.incrementAndGet();
                 } else {
                     context.getStats().copyErrors.incrementAndGet();
