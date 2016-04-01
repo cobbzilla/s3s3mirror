@@ -47,7 +47,10 @@ public class LocalFileListing implements FileListing {
     @Override public boolean hasMore() { return iterator.hasNext(); }
 
     public static FileSummary buildSummary(File file, String bucket) {
-        if (!file.exists()) return null;
+        if (!file.exists()) {
+            log.warn("buildSummary: file does not exist: "+file.getAbsolutePath());
+            return null;
+        }
 
         final boolean isStdin = bucket.equals(MirrorOptions.READ_FILES_FROM_STDIN);
 

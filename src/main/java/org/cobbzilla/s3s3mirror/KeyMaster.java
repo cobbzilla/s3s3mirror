@@ -97,8 +97,11 @@ public abstract class KeyMaster implements Runnable {
                             return;
                         }
                     }
-                    executor.submit(getTask(summary));
-                    counter++;
+                    final KeyJob task = getTask(summary);
+                    if (task != null) {
+                        executor.submit(task);
+                        counter++;
+                    }
                 }
 
                 summaries = lister.fetchNextBatch();

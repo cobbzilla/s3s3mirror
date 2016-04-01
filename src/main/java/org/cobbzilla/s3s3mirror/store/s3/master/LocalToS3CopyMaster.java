@@ -24,6 +24,7 @@ public class LocalToS3CopyMaster extends S3Master {
 
     @Override
     protected S3KeyUploadJob getTask(FileSummary summary) {
+        if (summary == null) return null;
         if (summary.isSymlink()) {
             return new LocalS3KeyLinkJob(s3client, context, summary, notifyLock);
         }
