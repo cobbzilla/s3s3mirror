@@ -67,6 +67,7 @@ public class S3ToLocalTest extends MirrorTestBase {
 
     @Test
     public void testCopyFromBucketWithPrefixToDestWithOtherPrefix() throws Exception {
+        if (!checkEnvs()) return;
         final String dir = "dir_"+random(10);
         final String key = "test_"+random(10);
         final String[] args = {SOURCE+"/foo/"+dir+"/", "./tmp/"};
