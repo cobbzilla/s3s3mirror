@@ -46,6 +46,10 @@ Which makes me wonder if there is any way to do this faster. I'm sure there must
 Note that s3s3mirror now has a prebuilt jar checked in to github, so you'll only need to do this if you've been playing with the source code.
 The above command requires that Maven 3 is installed.
 
+### License
+
+s3s3mirror is available under the [Apache 2.0 License](https://www.apache.org/licenses/LICENSE-2.0).
+
 ### Usage
 
     s3s3mirror.sh [options] <source-bucket>[/src-prefix/path/...] <destination-bucket>[/dest-prefix/path/...]
