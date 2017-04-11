@@ -16,7 +16,8 @@ public class CopyMaster extends KeyMaster {
     protected String getBucket(MirrorOptions options) { return options.getSourceBucket(); }
 
     protected KeyCopyJob getTask(S3ObjectSummary summary) {
-        if (summary.getSize() > MirrorOptions.MAX_SINGLE_REQUEST_UPLOAD_FILE_SIZE) {
+        CharSequence eTagMultipartDelim= "-";
+          if (summary.getSize() > MirrorOptions.MAX_SINGLE_REQUEST_UPLOAD_FILE_SIZE || summary.getETag().contains(eTagMultipartDelim)) {
             return new MultipartKeyCopyJob(client, context, summary, notifyLock);
         }
         return new KeyCopyJob(client, context, summary, notifyLock);
