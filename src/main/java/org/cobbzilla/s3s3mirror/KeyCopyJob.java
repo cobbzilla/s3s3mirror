@@ -72,7 +72,7 @@ public class KeyCopyJob extends KeyJob {
             if (options.isEncrypt()) {
 				request.putCustomRequestHeader("x-amz-server-side-encryption", "AES256");
 			}
-            
+
             request.setNewObjectMetadata(sourceMetadata);
             if (options.isCrossAccountCopy()) {
                 request.setAccessControlList(buildCrossAccountAcl(objectAcl));

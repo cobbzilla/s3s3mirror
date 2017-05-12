@@ -8,6 +8,7 @@ import lombok.Setter;
 public class MirrorContext {
 
     @Getter @Setter private MirrorOptions options;
+    @Getter @Setter private String targetOwnerId;
     @Getter private final MirrorStats stats = new MirrorStats();
 
 }

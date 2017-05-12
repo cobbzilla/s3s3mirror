@@ -5,6 +5,7 @@ import com.amazonaws.Protocol;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.auth.InstanceProfileCredentialsProvider;
 import com.amazonaws.auth.BasicSessionCredentials;
+import com.amazonaws.services.s3.model.AccessControlList;
 import lombok.Cleanup;
 import lombok.Getter;
 import lombok.Setter;
@@ -60,7 +61,7 @@ public class MirrorMain {
             }
 
             client = getAmazonS3Client();
-            context = new MirrorContext(options);
+            context = new MirrorContext(options, getTargetBucketOwnerId(client));
             master = new MirrorMaster(client, context);
 
             Runtime.getRuntime().addShutdownHook(context.getStats().getShutdownHook());
@@ -196,6 +197,11 @@ public class MirrorMain {
         } catch (Exception e) {
             // ignore - let other credential-discovery processes have a crack
         }
+    }
+
+    private String getTargetBucketOwnerId(AmazonS3Client client) {
+        AccessControlList targetBucketAcl = client.getBucketAcl(options.getDestinationBucket());
+        return targetBucketAcl.getOwner().getId();
     }
 
 }
