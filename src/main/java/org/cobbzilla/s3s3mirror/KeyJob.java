@@ -90,7 +90,8 @@ public abstract class KeyJob implements Runnable {
         }
 
         // Equal to the canned way: request.setCannedAccessControlList(CannedAccessControlList.BucketOwnerFullControl);
-        result.grantPermission(new CanonicalGrantee(context.getTargetOwnerId()), Permission.FullControl);
+        result.grantPermission(new CanonicalGrantee(context.getOwner().getId()), Permission.FullControl);
+        result.setOwner(context.getOwner());
 
         return result;
     }
