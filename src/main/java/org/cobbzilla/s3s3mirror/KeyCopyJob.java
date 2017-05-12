@@ -75,7 +75,7 @@ public class KeyCopyJob extends KeyJob {
             
             request.setNewObjectMetadata(sourceMetadata);
             if (options.isCrossAccountCopy()) {
-                request.setCannedAccessControlList(CannedAccessControlList.BucketOwnerFullControl);
+                request.setAccessControlList(buildCrossAccountAcl(objectAcl));
             } else {
                 request.setAccessControlList(objectAcl);
             }

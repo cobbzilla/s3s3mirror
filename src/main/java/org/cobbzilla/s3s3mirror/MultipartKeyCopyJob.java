@@ -29,7 +29,7 @@ public class MultipartKeyCopyJob extends KeyCopyJob {
                 .withObjectMetadata(sourceMetadata);
 
         if (options.isCrossAccountCopy()) {
-            initiateRequest.withCannedACL(CannedAccessControlList.BucketOwnerFullControl);
+            initiateRequest.withAccessControlList(buildCrossAccountAcl(objectAcl));
         } else {
             initiateRequest.withAccessControlList(objectAcl);
         }
