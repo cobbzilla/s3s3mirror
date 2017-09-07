@@ -30,7 +30,7 @@ public class S3ClientService {
                     .withProxyPort(options.getProxyPort());
         }
 
-        final AmazonS3Client client = new AmazonS3Client(options, clientConfiguration);
+        final AmazonS3Client client = new AmazonS3Client(options.getAwsCredentialProviders(), clientConfiguration);
         if (options.hasEndpoint()) client.setEndpoint(options.getEndpoint());
 
         return client;
