@@ -1,5 +1,9 @@
 package org.cobbzilla.s3s3mirror;
 
+import com.amazonaws.auth.AWSCredentialsProviderChain;
+import com.amazonaws.auth.AWSStaticCredentialsProvider;
+import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import lombok.Cleanup;
 import lombok.Getter;
 import lombok.Setter;
@@ -79,9 +83,13 @@ public class MirrorMain {
                     options.setProxyPort(Integer.parseInt(line.substring(line.indexOf("=") + 1).trim()));
                 }
             }
+            options.setAwsCredentialProviders(new AWSCredentialsProviderChain(new AWSStaticCredentialsProvider(new BasicAWSCredentials(options.getAWSAccessKeyId(), options.getAWSSecretKey()))));
         }
         if (!options.hasAwsKeys()) {
-            throw new IllegalStateException("ENV vars not defined: " + MirrorOptions.AWS_ACCESS_KEY + " and/or " + MirrorOptions.AWS_SECRET_KEY);
+            // try to load from env vars, system properties, profiles, or EC2 instance profile
+            options.setAwsCredentialProviders(new DefaultAWSCredentialsProviderChain());
+            if (options.getAwsCredentialProviders().getCredentials() == null);
+                throw new IllegalStateException("ENV vars not defined: " + MirrorOptions.AWS_ACCESS_KEY + " and/or " + MirrorOptions.AWS_SECRET_KEY);
         }
         options.initDerivedFields();
     }

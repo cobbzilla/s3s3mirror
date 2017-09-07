@@ -1,6 +1,7 @@
 package org.cobbzilla.s3s3mirror;
 
 import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.AWSCredentialsProviderChain;
 import com.amazonaws.services.s3.model.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -29,6 +30,8 @@ public class MirrorOptions implements AWSCredentials {
     @Getter @Setter private String aWSSecretKey = System.getenv().get(AWS_SECRET_KEY);
 
     public boolean hasAwsKeys() { return aWSAccessKeyId != null && aWSSecretKey != null; }
+
+    @Getter @Setter private AWSCredentialsProviderChain awsCredentialProviders;
 
     public static final String USAGE_DRY_RUN = "Do not actually do anything, but show what would be done";
     public static final String OPT_DRY_RUN = "-n";
