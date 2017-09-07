@@ -70,26 +70,33 @@ public class MirrorMain {
         parser.parseArgument(args);
         if (!options.hasAwsKeys()) {
             // try to load from ~/.s3cfg
-            @Cleanup BufferedReader reader = new BufferedReader(new FileReader(System.getProperty("user.home")+File.separator+".s3cfg"));
-            String line;
-            while ((line = reader.readLine()) != null) {
-                if (line.trim().startsWith("access_key")) {
-                    options.setAWSAccessKeyId(line.substring(line.indexOf("=") + 1).trim());
-                } else if (line.trim().startsWith("secret_key")) {
-                    options.setAWSSecretKey(line.substring(line.indexOf("=") + 1).trim());
-                } else if (!options.getHasProxy() && line.trim().startsWith("proxy_host")) {
-                    options.setProxyHost(line.substring(line.indexOf("=") + 1).trim());
-                } else if (!options.getHasProxy() && line.trim().startsWith("proxy_port")){
-                    options.setProxyPort(Integer.parseInt(line.substring(line.indexOf("=") + 1).trim()));
+            try {
+                @Cleanup BufferedReader reader = new BufferedReader(new FileReader(System.getProperty("user.home") + File.separator + ".s3cfg"));
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    if (line.trim().startsWith("access_key")) {
+                        options.setAWSAccessKeyId(line.substring(line.indexOf("=") + 1).trim());
+                    } else if (line.trim().startsWith("secret_key")) {
+                        options.setAWSSecretKey(line.substring(line.indexOf("=") + 1).trim());
+                    } else if (!options.getHasProxy() && line.trim().startsWith("proxy_host")) {
+                        options.setProxyHost(line.substring(line.indexOf("=") + 1).trim());
+                    } else if (!options.getHasProxy() && line.trim().startsWith("proxy_port")) {
+                        options.setProxyPort(Integer.parseInt(line.substring(line.indexOf("=") + 1).trim()));
+                    }
                 }
+                options.setAwsCredentialProviders(new AWSCredentialsProviderChain(new AWSStaticCredentialsProvider(new BasicAWSCredentials(options.getAWSAccessKeyId(), options.getAWSSecretKey()))));
+                log.info("Using s3cfg credentials");
+            } catch (Exception e) {
+                // likely file not found, so log at debug and continue to try default aws creds next
+                log.debug("Could not load credentials from ~/.s3cfg", e);
             }
-            options.setAwsCredentialProviders(new AWSCredentialsProviderChain(new AWSStaticCredentialsProvider(new BasicAWSCredentials(options.getAWSAccessKeyId(), options.getAWSSecretKey()))));
         }
         if (!options.hasAwsKeys()) {
-            // try to load from env vars, system properties, profiles, or EC2 instance profile
+            // try to load creds from env vars, system properties, profiles, or EC2 instance profile
             options.setAwsCredentialProviders(new DefaultAWSCredentialsProviderChain());
-            if (options.getAwsCredentialProviders().getCredentials() == null);
+            if (options.getAwsCredentialProviders().getCredentials() == null)
                 throw new IllegalStateException("ENV vars not defined: " + MirrorOptions.AWS_ACCESS_KEY + " and/or " + MirrorOptions.AWS_SECRET_KEY);
+            log.info("Using aws default credential provider");
         }
         options.initDerivedFields();
     }
