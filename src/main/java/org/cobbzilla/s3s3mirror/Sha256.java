@@ -18,10 +18,15 @@ public class Sha256 {
 
     public static ObjectMetadata getS3MetadataWithHash(File srcFile) {
         final ObjectMetadata metadata = new ObjectMetadata();
-        final Map<String, String> userMeta = new HashMap<>();
-        userMeta.put(S3S3_SHA256, hash(srcFile));
+        final Map<String, String> userMeta = userMetaWithHash(srcFile);
         metadata.setUserMetadata(userMeta);
         return metadata;
+    }
+
+    public static Map<String, String> userMetaWithHash(File srcFile) {
+        final Map<String, String> userMeta = new HashMap<>();
+        userMeta.put(S3S3_SHA256, hash(srcFile));
+        return userMeta;
     }
 
     /** key in s3 object metadata, used when copying to/from local because ETag is not calculable by your local filesystem */
