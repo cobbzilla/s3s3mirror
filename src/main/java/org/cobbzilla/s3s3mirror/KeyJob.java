@@ -1,11 +1,7 @@
 package org.cobbzilla.s3s3mirror;
 
 import com.amazonaws.services.s3.AmazonS3Client;
-import com.amazonaws.services.s3.model.AccessControlList;
-import com.amazonaws.services.s3.model.CannedAccessControlList;
-import com.amazonaws.services.s3.model.AmazonS3Exception;
-import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.amazonaws.services.s3.model.S3ObjectSummary;
+import com.amazonaws.services.s3.model.*;
 import org.slf4j.Logger;
 
 public abstract class KeyJob implements Runnable {
@@ -82,6 +78,22 @@ public abstract class KeyJob implements Runnable {
             }
         }
         throw ex;
+    }
+
+    AccessControlList buildCrossAccountAcl(AccessControlList original) {
+        AccessControlList result = new AccessControlList();
+        for (Grant grant : original.getGrantsAsList()) {
+            // Covers all 3 types: Everyone, Authenticate User, Log Delivery
+            if (grant.getGrantee() instanceof GroupGrantee) {
+                result.grantPermission(grant.getGrantee(), grant.getPermission());
+            }
+        }
+
+        // Equal to the canned way: request.setCannedAccessControlList(CannedAccessControlList.BucketOwnerFullControl);
+        result.grantPermission(new CanonicalGrantee(context.getOwner().getId()), Permission.FullControl);
+        result.setOwner(context.getOwner());
+
+        return result;
     }
 
 }
