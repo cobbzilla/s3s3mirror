@@ -37,7 +37,7 @@ Which makes me wonder if there is any way to do this faster. I'm sure there must
 
 ### System Requirements
 
-* Java 6
+* Java 8 or higher
 
 ### Building
 

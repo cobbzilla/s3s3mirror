@@ -3,7 +3,7 @@
 
 THISDIR=$(cd "$(dirname $0)" && pwd)
 
-VERSION=2.1.2
+VERSION=2.1.3
 JARFILE="${THISDIR}/target/s3s3mirror-${VERSION}-SNAPSHOT.jar"
 VERSION_ARG="-Ds3s3mirror.version=${VERSION}"
 

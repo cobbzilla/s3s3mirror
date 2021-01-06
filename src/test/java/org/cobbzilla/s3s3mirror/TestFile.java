@@ -4,7 +4,7 @@ import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import lombok.Cleanup;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.math.RandomUtils;
+import org.apache.commons.lang3.RandomUtils;
 
 import java.io.*;
 import java.util.List;
