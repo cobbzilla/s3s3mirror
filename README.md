@@ -8,7 +8,10 @@ Designed to be lightning-fast and highly concurrent, with modest CPU and memory 
 An object will be copied if and only if at least one of the following holds true:
 
 * The object does not exist in the destination bucket.
-* The size or ETag of the object in the destination bucket are different from the size/ETag in the source bucket.
+* The "sync strategy" triggers (by default uses the Etag sync strategy)
+    * Etag Strategy (Default): If the size or Etags don't match between the source and destination bucket.
+    * Size Strategy: If the sizes don't match between the source and destination bucket.
+    * Size and Last Modified Strategy: If the source and destination objects have a different size, or the source bucket object has a more recent last modified date. 
 
 When copying, the source metadata and ACL lists are also copied to the destination object.
 
@@ -89,6 +92,8 @@ I encourage you to port them to the 2.x branch, if you have the ability.
     -s (--ssl)                    : Use SSL for all S3 api operations (default false)
     -E (--server-side-encryption) : Enable AWS managed server-side encryption (default false)
     -l (--storage-class)		  : S3 storage class "Standard" or "ReducedRedundancy" (default Standard)
+    -S (--size-only)              : Only takes size of objects in consideration when determining if a copy is required.
+    -L (--size-and-last-modified) : Uses size and last modified to determine if files have change like the AWS CLI and ignores etags. If -S (--size-only) is also specified that strategy is selected over this strategy.
 
 
 ### Examples
