@@ -3,6 +3,7 @@ package org.cobbzilla.s3s3mirror;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.*;
 import lombok.extern.slf4j.Slf4j;
+import org.cobbzilla.s3s3mirror.comparisonstrategies.ComparisonStrategy;
 import org.cobbzilla.s3s3mirror.store.FileSummary;
 import org.cobbzilla.s3s3mirror.store.s3.job.S3KeyCopyJob;
 
@@ -12,8 +13,8 @@ import java.util.List;
 @Slf4j
 public class MultipartKeyCopyJob extends S3KeyCopyJob {
 
-    public MultipartKeyCopyJob(AmazonS3Client client, MirrorContext context, FileSummary summary, Object notifyLock) {
-        super(client, context, summary, notifyLock);
+    public MultipartKeyCopyJob(AmazonS3Client client, MirrorContext context, FileSummary summary, Object notifyLock, ComparisonStrategy comparisonStrategy) {
+        super(client, context, summary, notifyLock, comparisonStrategy);
     }
 
     @Override

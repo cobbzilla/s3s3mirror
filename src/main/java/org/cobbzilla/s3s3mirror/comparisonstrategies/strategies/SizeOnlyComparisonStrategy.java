@@ -1,5 +1,6 @@
-package org.cobbzilla.s3s3mirror.comparisonstrategies;
+package org.cobbzilla.s3s3mirror.comparisonstrategies.strategies;
 
+import org.cobbzilla.s3s3mirror.comparisonstrategies.ComparisonStrategy;
 import org.cobbzilla.s3s3mirror.store.FileSummary;
 
 public class SizeOnlyComparisonStrategy implements ComparisonStrategy {

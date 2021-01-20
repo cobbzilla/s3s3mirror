@@ -1,4 +1,4 @@
-package org.cobbzilla.s3s3mirror.comparisonstrategies;
+package org.cobbzilla.s3s3mirror.comparisonstrategies.strategies;
 
 import org.cobbzilla.s3s3mirror.store.FileSummary;
 

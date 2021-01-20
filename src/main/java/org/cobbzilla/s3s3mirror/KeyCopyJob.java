@@ -136,42 +136,6 @@ public abstract class KeyCopyJob implements KeyJob {
             return true;
         }
 
-        // todo Start
-        if (destination.getSize() != summary.getSize()) {
-            if (verbose) getLog().info("shouldTransfer: destination key ("+getKeyDestination()+") exists but size differs, returning true");
-            return true;
-        }
-
-        final String destETag = destination.getETag();
-        final String srcETag = summary.getETag();
-        boolean etagMatch = true;
-        if (destETag != null && srcETag != null && !destETag.equals(srcETag)) {
-            if (verbose) getLog().info("shouldTransfer: destination key ("+getKeyDestination()+") exists but ETag differs, checking SHA-256");
-            etagMatch = false;
-        }
-
-        String destSha256 = destination.getSha256();
-        String srcSha256 = summary.getSha256();
-        if (srcSha256 != null && srcSha256.equals(Sha256.CHECK_OBJECT_METADATA)) {
-            srcSha256 = getObjectMetadata(options.getSourceBucket(), summary.getKey()).getUserMetadata().get(Sha256.S3S3_SHA256);
-        }
-        boolean shaMatch = true;
-        if (destSha256 == null) {
-            if (verbose) getLog().info("shouldTransfer: destination key ("+getKeyDestination()+") exists but has no SHA-256 hash");
-            shaMatch = false;
-        } else if (srcSha256 == null) {
-            if (verbose) getLog().info("shouldTransfer: destination key ("+getKeyDestination()+") exists and has SHA-256 hash, but source does not");
-            shaMatch = false;
-        } else if (!destSha256.equals(srcSha256)) {
-            if (verbose) getLog().info("shouldTransfer: destination key ("+getKeyDestination()+") exists but SHA-256 hash differs");
-            shaMatch = false;
-        }
-        if (etagMatch || shaMatch) {
-            if (verbose) getLog().info("shouldTransfer: destination key ("+getKeyDestination()+") exists and one of ETag/SHA-256 matches, return false for key: "+key);
-            return false;
-        }
-
-        if (verbose) getLog().info("shouldTransfer: destination key ("+getKeyDestination()+") differs from source, return true for key: "+key);
-        return true;
+        return comparisonStrategy.sourceDifferent(summary, destination);
     }
 }

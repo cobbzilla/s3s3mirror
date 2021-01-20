@@ -1,8 +1,15 @@
 package org.cobbzilla.s3s3mirror;
 
+import com.amazonaws.services.s3.AmazonS3Client;
 import lombok.extern.slf4j.Slf4j;
+import org.cobbzilla.s3s3mirror.comparisonstrategies.ComparisonStrategy;
+import org.cobbzilla.s3s3mirror.comparisonstrategies.ComparisonStrategyFactory;
+import org.cobbzilla.s3s3mirror.comparisonstrategies.strategies.EtagComparisonStrategy;
+import org.cobbzilla.s3s3mirror.comparisonstrategies.SyncStrategy;
+import org.cobbzilla.s3s3mirror.store.s3.S3FileStore;
 import org.cobbzilla.s3s3mirror.store.s3.master.*;
 
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 
@@ -21,23 +28,50 @@ public class FileStoreFactory {
         final String destination = options.getDestination();
         final String source = options.getSource();
         final boolean verbose = options.isVerbose();
+
+        ComparisonStrategy comparisonStrategy = ComparisonStrategyFactory.getStrategy(context.getOptions(), key -> {
+            S3FileStore listSource = new S3FileStore(context.getOptions());
+            AmazonS3Client s3client = listSource.getS3client();
+
+            // todo: Think through this a touch more
+            Map<String, String> userMetadata = S3FileStore.getObjectMetadata(context.getOptions().getSourceBucket(),
+                                                                              key,
+                                                                              context,
+                                                                              s3client).getUserMetadata();
+            return userMetadata == null ? "" : userMetadata.get(Sha256.S3S3_SHA256);
+        });
+
         if (isLocalPath(destination)) {
             if (isLocalPath(source)) {
                 throw new IllegalArgumentException("When both sides are local, wouldn't you prefer `rsync`, or even `cp -R` ?");
             }
+
+            if (comparisonStrategy instanceof EtagComparisonStrategy) {
+                throw new IllegalArgumentException("Etag comparison strategy isn't compatible with local files");
+            }
+
             // copy S3->local
             if (verbose) log.info("CopyMaster will be S3ToLocalCopyMaster");
-            return new S3ToLocalCopyMaster(context, workQueue, executor);
+            return new S3ToLocalCopyMaster(context, workQueue, executor, comparisonStrategy);
 
         } else if (isLocalPath(source)) {
             // copy local->S3
             if (verbose) log.info("CopyMaster will be LocalToS3CopyMaster");
-            return new LocalToS3CopyMaster(context, workQueue, executor);
+
+            if (comparisonStrategy instanceof EtagComparisonStrategy) {
+                throw new IllegalArgumentException("Etag comparison strategy isn't compatible with local files");
+            }
+
+            return new LocalToS3CopyMaster(context, workQueue, executor, comparisonStrategy);
 
         } else {
+            if (context.getOptions().getSyncStrategy() == SyncStrategy.AUTO) {
+                comparisonStrategy = new EtagComparisonStrategy();
+            }
+
             // regular S3->S3 copy
             if (verbose) log.info("CopyMaster will be S3CopyMaster");
-            return new S3CopyMaster(context, workQueue, executor);
+            return new S3CopyMaster(context, workQueue, executor, comparisonStrategy);
         }
     }
 
