@@ -3,6 +3,7 @@ package org.cobbzilla.s3s3mirror;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.*;
 import lombok.extern.slf4j.Slf4j;
+import org.cobbzilla.s3s3mirror.comparisonstrategies.ComparisonStrategy;
 import org.slf4j.Logger;
 
 import java.util.Date;
@@ -14,8 +15,9 @@ import java.util.Date;
 public class KeyCopyJob extends KeyJob {
 
     protected String keydest;
+    protected ComparisonStrategy comparisonStrategy;
 
-    public KeyCopyJob(AmazonS3Client client, MirrorContext context, S3ObjectSummary summary, Object notifyLock) {
+    public KeyCopyJob(AmazonS3Client client, MirrorContext context, S3ObjectSummary summary, Object notifyLock, ComparisonStrategy comparisonStrategy) {
         super(client, context, summary, notifyLock);
 
         keydest = summary.getKey();
@@ -24,6 +26,7 @@ public class KeyCopyJob extends KeyJob {
             keydest = keydest.substring(options.getPrefixLength());
             keydest = options.getDestPrefix() + keydest;
         }
+        this.comparisonStrategy = comparisonStrategy;
     }
 
     @Override public Logger getLog() { return log; }
@@ -136,25 +139,9 @@ public class KeyCopyJob extends KeyJob {
         if (summary.getSize() > MirrorOptions.MAX_SINGLE_REQUEST_UPLOAD_FILE_SIZE) {
             return metadata.getContentLength() != summary.getSize();
         }
-        final boolean objectChanged = objectChanged(metadata);
+        final boolean objectChanged = comparisonStrategy.sourceDifferent(summary, metadata);
         if (verbose && !objectChanged) log.info("Destination file is same as source, not copying: "+ key);
 
         return objectChanged;
-    }
-
-    boolean objectChanged(ObjectMetadata metadata) {
-        final MirrorOptions options = context.getOptions();
-        final KeyFingerprint sourceFingerprint;
-        final KeyFingerprint destFingerprint;
-        
-        if (options.isSizeOnly()) {
-            sourceFingerprint = new KeyFingerprint(summary.getSize());
-            destFingerprint = new KeyFingerprint(metadata.getContentLength());
-        } else {
-            sourceFingerprint = new KeyFingerprint(summary.getSize(), summary.getETag());
-            destFingerprint = new KeyFingerprint(metadata.getContentLength(), metadata.getETag());
-        }
-
-        return !sourceFingerprint.equals(destFingerprint);
     }
 }

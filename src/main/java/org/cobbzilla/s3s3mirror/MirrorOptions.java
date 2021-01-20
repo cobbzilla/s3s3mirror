@@ -117,6 +117,12 @@ public class MirrorOptions implements AWSCredentials {
     @Option(name=OPT_SIZE_ONLY, aliases=LONGOPT_SIZE_ONLY, usage=USAGE_SIZE_ONLY)
     @Getter @Setter private boolean sizeOnly = false;
 
+    public static final String USAGE_SIZE_LAST_MODIFIED = "Uses size and last modified to determine if files have change like the AWS CLI and ignores etags. If size only is also specified that strategy is selected.";
+    public static final String OPT_SIZE_LAST_MODIFIED = "-L";
+    public static final String LONGOPT_SIZE_LAST_MODIFIED = "--size-and-last-modified";
+    @Option(name=OPT_SIZE_LAST_MODIFIED, aliases=LONGOPT_SIZE_LAST_MODIFIED, usage=USAGE_SIZE_LAST_MODIFIED)
+    @Getter @Setter private boolean sizeAndLastModified = false;
+
     public static final String USAGE_CTIME = "Only copy objects whose Last-Modified date is younger than this many days. " +
             "For other time units, use these suffixes: y (years), M (months), d (days), w (weeks), h (hours), m (minutes), s (seconds)";
     public static final String OPT_CTIME = "-c";

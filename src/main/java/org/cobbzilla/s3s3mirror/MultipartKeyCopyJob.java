@@ -3,6 +3,7 @@ package org.cobbzilla.s3s3mirror;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.*;
 import lombok.extern.slf4j.Slf4j;
+import org.cobbzilla.s3s3mirror.comparisonstrategies.ComparisonStrategy;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,8 +11,8 @@ import java.util.List;
 @Slf4j
 public class MultipartKeyCopyJob extends KeyCopyJob {
 
-    public MultipartKeyCopyJob(AmazonS3Client client, MirrorContext context, S3ObjectSummary summary, Object notifyLock) {
-        super(client, context, summary, notifyLock);
+    public MultipartKeyCopyJob(AmazonS3Client client, MirrorContext context, S3ObjectSummary summary, Object notifyLock, ComparisonStrategy comparisonStrategy) {
+        super(client, context, summary, notifyLock, comparisonStrategy);
     }
 
     @Override
@@ -90,10 +91,5 @@ public class MultipartKeyCopyJob extends KeyCopyJob {
             eTags.add(new PartETag(response.getPartNumber(), response.getETag()));
         }
         return eTags;
-    }
-
-    @Override
-    boolean objectChanged(ObjectMetadata metadata) {
-        return summary.getSize() != metadata.getContentLength();
     }
 }
