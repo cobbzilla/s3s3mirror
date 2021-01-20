@@ -4,6 +4,7 @@ import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.cobbzilla.s3s3mirror.comparisonstrategies.ComparisonStrategy;
 import org.cobbzilla.s3s3mirror.store.FileSummary;
 import org.cobbzilla.s3s3mirror.store.s3.S3FileStore;
 import org.slf4j.Logger;
@@ -15,14 +16,16 @@ public abstract class KeyCopyJob implements KeyJob {
     protected final MirrorContext context;
     protected final FileSummary summary;
     protected final Object notifyLock;
+    protected final ComparisonStrategy comparisonStrategy;
 
     @Getter protected String keyDestination;
 
-    protected KeyCopyJob(AmazonS3Client s3client, MirrorContext context, FileSummary summary, Object notifyLock) {
+    protected KeyCopyJob(AmazonS3Client s3client, MirrorContext context, FileSummary summary, Object notifyLock, ComparisonStrategy comparisonStrategy) {
         this.s3client = s3client;
         this.context = context;
         this.summary = summary;
         this.notifyLock = notifyLock;
+        this.comparisonStrategy = comparisonStrategy;
 
         keyDestination = summary.getKey();
         final MirrorOptions options = context.getOptions();
@@ -133,6 +136,7 @@ public abstract class KeyCopyJob implements KeyJob {
             return true;
         }
 
+        // todo Start
         if (destination.getSize() != summary.getSize()) {
             if (verbose) getLog().info("shouldTransfer: destination key ("+getKeyDestination()+") exists but size differs, returning true");
             return true;
