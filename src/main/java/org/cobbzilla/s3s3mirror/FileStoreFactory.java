@@ -33,7 +33,6 @@ public class FileStoreFactory {
             S3FileStore listSource = new S3FileStore(context.getOptions());
             AmazonS3Client s3client = listSource.getS3client();
 
-            // todo: Think through this a touch more
             Map<String, String> userMetadata = S3FileStore.getObjectMetadata(context.getOptions().getSourceBucket(),
                                                                               key,
                                                                               context,
