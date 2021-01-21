@@ -39,9 +39,10 @@ public class MirrorMaster {
 
         if (context.getOptions().getStatusListener() != null) {
             scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
+            long rateInMillis = context.getOptions().getStatusListener().getUpdateInterval().toMillis();
             scheduledExecutorService.scheduleAtFixedRate(() -> context.getOptions().getStatusListener().provideStatus(context.getStats().copy()),
-                                                         0L,
-                                                         context.getOptions().getStatusListener().getUpdateInterval().toMillis(),
+                                                         rateInMillis,
+                                                         rateInMillis,
                                                          TimeUnit.MILLISECONDS);
         }
 
