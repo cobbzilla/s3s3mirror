@@ -1,6 +1,6 @@
 package org.cobbzilla.s3s3mirror.store;
 
-import org.cobbzilla.s3s3mirror.MirrorStats;
+import org.cobbzilla.s3s3mirror.stats.MirrorStats;
 
 public interface FileStore {
 

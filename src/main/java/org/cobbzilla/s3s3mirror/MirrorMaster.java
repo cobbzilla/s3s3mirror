@@ -1,6 +1,7 @@
 package org.cobbzilla.s3s3mirror;
 
 import lombok.extern.slf4j.Slf4j;
+import org.cobbzilla.s3s3mirror.stats.MirrorStats;
 
 import java.util.concurrent.*;
 
@@ -16,11 +17,12 @@ public class MirrorMaster {
 
     public MirrorMaster(MirrorContext context) { this.context = context; }
 
-    public void mirror() {
-
+    public MirrorStats mirror() {
+        ScheduledExecutorService scheduledExecutorService = null;
         log.info("version "+VERSION+" starting");
 
         final MirrorOptions options = context.getOptions();
+        context.getStats().logFailedOperationInfo.set(options.isDetailedErrorLogging());
 
         if (options.isVerbose() && options.hasCtime()) log.info("will not copy anything older than "+options.getCtime()+" (cutoff="+options.getMaxAgeDate()+")");
 
@@ -34,6 +36,14 @@ public class MirrorMaster {
         };
 
         final ThreadPoolExecutor executorService = new ThreadPoolExecutor(options.getMaxThreads(), options.getMaxThreads(), 1, TimeUnit.MINUTES, workQueue, rejectedExecutionHandler);
+
+        if (context.getOptions().getStatusListener() != null) {
+            scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
+            scheduledExecutorService.scheduleAtFixedRate(() -> context.getOptions().getStatusListener().provideStatus(context.getStats().copy()),
+                                                         0L,
+                                                         context.getOptions().getStatusListener().getUpdateInterval().toMillis(),
+                                                         TimeUnit.MILLISECONDS);
+        }
 
         final KeyMaster copyMaster = FileStoreFactory.buildCopyMaster(context, workQueue, executorService);
         KeyMaster deleteMaster = null;
@@ -51,7 +61,10 @@ public class MirrorMaster {
                     log.info("mirror: completed");
                     break;
                 }
-                if (Sleep.sleep(100)) return;
+                if (Sleep.sleep(100)) {
+                    context.getStats().completedFully.set(false);
+                    return context.getStats();
+                }
             }
 
         } catch (Exception e) {
@@ -62,9 +75,14 @@ public class MirrorMaster {
             if (deleteMaster != null) {
                 try { deleteMaster.stop(); } catch (Exception e) { log.error("Error stopping deleteMaster: "+e, e); }
             }
+            if (scheduledExecutorService != null) {
+                scheduledExecutorService.shutdownNow();
+            }
             // this will wait for currently executing tasks to finish, but there should be none by now
             executorService.shutdown();
         }
+
+        return context.getStats();
     }
 
     public static int getMaxQueueCapacity(MirrorOptions options) {

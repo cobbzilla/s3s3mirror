@@ -1,6 +1,7 @@
 package org.cobbzilla.s3s3mirror;
 
 import com.amazonaws.services.s3.AmazonS3Client;
+import org.cobbzilla.s3s3mirror.stats.MirrorStats;
 import org.cobbzilla.s3s3mirror.store.FileSummary;
 
 public abstract class KeyDeleteJob extends KeyCopyJob {
@@ -56,13 +57,13 @@ public abstract class KeyDeleteJob extends KeyCopyJob {
                 if (deletedOK) {
                     stats.objectsDeleted.incrementAndGet();
                 } else {
-                    stats.deleteErrors.incrementAndGet();
+                    stats.addErroredDelete(this);
                 }
             }
 
         } catch (Exception e) {
             getLog().error("error deleting key: "+key+": "+e);
-            if (!options.isDryRun()) context.getStats().deleteErrors.incrementAndGet();
+            if (!options.isDryRun()) context.getStats().addErroredDelete(this);
 
         } finally {
             synchronized (notifyLock) {

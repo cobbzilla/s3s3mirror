@@ -3,7 +3,7 @@ package org.cobbzilla.s3s3mirror.store.local;
 import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.s3s3mirror.FileStoreFactory;
 import org.cobbzilla.s3s3mirror.MirrorOptions;
-import org.cobbzilla.s3s3mirror.MirrorStats;
+import org.cobbzilla.s3s3mirror.stats.MirrorStats;
 import org.cobbzilla.s3s3mirror.store.FileListing;
 import org.cobbzilla.s3s3mirror.store.FileStore;
 import org.cobbzilla.s3s3mirror.store.ListRequest;
