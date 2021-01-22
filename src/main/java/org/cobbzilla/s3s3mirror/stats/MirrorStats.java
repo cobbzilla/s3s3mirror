@@ -47,9 +47,9 @@ public class MirrorStats {
     }
 
     public String toString () {
-        final long durationMillis = System.currentTimeMillis() - start;
+        final long durationMillis = getDurationInMilliseconds();
         final double durationMinutes = durationMillis / 60000.0d;
-        final String duration = String.format("%d:%02d:%02d", durationMillis / HOUR, (durationMillis % HOUR) / MINUTE, (durationMillis % MINUTE) / SECOND);
+        final String duration = getDurationFormatted();
         final double readRate = objectsRead.get() / durationMinutes;
         final double copyRate = (objectsCopied.get() + objectsPut.get()) / durationMinutes;
         final double deleteRate = objectsDeleted.get() / durationMinutes;
@@ -93,6 +93,15 @@ public class MirrorStats {
         if (logFailedOperationInfo.get()) {
             failedDeletes.add(new FailedOperation(failedObject.getSource(), failedObject.getDestination()));
         }
+    }
+
+    public long getDurationInMilliseconds() {
+        return System.currentTimeMillis() - start;
+    }
+
+    public String getDurationFormatted() {
+        final long durationMillis = getDurationInMilliseconds();
+        return String.format("%d:%02d:%02d", durationMillis / HOUR, (durationMillis % HOUR) / MINUTE, (durationMillis % MINUTE) / SECOND);
     }
 
     public MirrorStats copy() {
