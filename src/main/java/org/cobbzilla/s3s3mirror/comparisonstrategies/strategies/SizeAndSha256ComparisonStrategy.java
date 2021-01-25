@@ -1,6 +1,5 @@
 package org.cobbzilla.s3s3mirror.comparisonstrategies.strategies;
 
-import lombok.SneakyThrows;
 import org.cobbzilla.s3s3mirror.Sha256;
 import org.cobbzilla.s3s3mirror.comparisonstrategies.S3Sha256Retriever;
 import org.cobbzilla.s3s3mirror.store.FileSummary;
@@ -16,18 +15,22 @@ public class SizeAndSha256ComparisonStrategy extends SizeOnlyComparisonStrategy 
         return super.sourceDifferent(source, destination) || shasAreDifferent(source, destination);
     }
 
-    @SneakyThrows
     private boolean shasAreDifferent(FileSummary source, FileSummary destination) {
-        if (source.getSha256() == null || destination.getSha256() == null) {
+        try {
+            if (source.getSha256() == null || destination.getSha256() == null) {
+                return true;
+            }
+
+            String sourceSha256 = source.getSha256();
+
+            if (source.getSha256().equals(Sha256.CHECK_OBJECT_METADATA)) {
+                sourceSha256 = s3ShaReceiver.getSha(source.getKey());
+            }
+
+            return !destination.getSha256().equals(sourceSha256);
+        } catch (Exception ex) {
+            // If issues error on the side of copying file.
             return true;
         }
-
-        String sourceSha256 = source.getSha256();
-
-        if (source.getSha256().equals(Sha256.CHECK_OBJECT_METADATA)) {
-            sourceSha256 = s3ShaReceiver.getSha(source.getKey());
-        }
-
-        return !destination.getSha256().equals(sourceSha256);
     }
 }
