@@ -67,12 +67,12 @@ public abstract class KeyCopyJob implements KeyJob {
                     if (options.isVerbose()) getLog().info("successfully copied "+key+" -> "+getKeyDestination());
                     context.getStats().objectsCopied.incrementAndGet();
                 } else {
-                    context.getStats().copyErrors.incrementAndGet();
+                    context.getStats().addErroredCopy(this);
                 }
             }
         } catch (Exception e) {
             getLog().error("error copying key: " + key + ": " + e);
-            if (!options.isDryRun()) context.getStats().copyErrors.incrementAndGet();
+            if (!options.isDryRun()) context.getStats().addErroredCopy(this);
 
         } finally {
             synchronized (notifyLock) {
@@ -137,5 +137,15 @@ public abstract class KeyCopyJob implements KeyJob {
         }
 
         return comparisonStrategy.sourceDifferent(summary, destination);
+    }
+
+    @Override
+    public String getSource() {
+        return summary.getKey();
+    }
+
+    @Override
+    public String getDestination() {
+        return keyDestination;
     }
 }

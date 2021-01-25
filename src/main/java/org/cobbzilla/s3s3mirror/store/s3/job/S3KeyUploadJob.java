@@ -5,7 +5,7 @@ import com.amazonaws.services.s3.model.PutObjectRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.s3s3mirror.MirrorContext;
 import org.cobbzilla.s3s3mirror.MirrorOptions;
-import org.cobbzilla.s3s3mirror.MirrorStats;
+import org.cobbzilla.s3s3mirror.stats.MirrorStats;
 import org.cobbzilla.s3s3mirror.Sha256;
 import org.cobbzilla.s3s3mirror.comparisonstrategies.ComparisonStrategy;
 import org.cobbzilla.s3s3mirror.store.FileSummary;

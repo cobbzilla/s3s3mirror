@@ -3,10 +3,14 @@ package org.cobbzilla.s3s3mirror;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSCredentialsProviderChain;
 import com.amazonaws.services.s3.model.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+import org.cobbzilla.s3s3mirror.stats.StatusListener;
 import org.cobbzilla.s3s3mirror.comparisonstrategies.SyncStrategy;
 import org.joda.time.DateTime;
 import org.kohsuke.args4j.Argument;
@@ -19,6 +23,9 @@ import java.util.regex.Pattern;
 import static org.cobbzilla.s3s3mirror.MirrorConstants.GB;
 
 @Slf4j
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class MirrorOptions implements AWSCredentials {
 
     public static final String S3_PROTOCOL_PREFIX = "s3://";
@@ -34,34 +41,42 @@ public class MirrorOptions implements AWSCredentials {
 
     @Getter @Setter private AWSCredentialsProviderChain awsCredentialProviders;
 
+    @Getter @Setter private boolean detailedErrorLogging;
+    @Getter @Setter private StatusListener statusListener;
+
     public static final String USAGE_DRY_RUN = "Do not actually do anything, but show what would be done";
     public static final String OPT_DRY_RUN = "-n";
     public static final String LONGOPT_DRY_RUN = "--dry-run";
     @Option(name=OPT_DRY_RUN, aliases=LONGOPT_DRY_RUN, usage=USAGE_DRY_RUN)
+    @Builder.Default
     @Getter @Setter private boolean dryRun = false;
 
     public static final String USAGE_VERBOSE = "Verbose output";
     public static final String OPT_VERBOSE = "-v";
     public static final String LONGOPT_VERBOSE = "--verbose";
     @Option(name=OPT_VERBOSE, aliases=LONGOPT_VERBOSE, usage=USAGE_VERBOSE)
+    @Builder.Default
     @Getter @Setter private boolean verbose = false;
 
     public static final String USAGE_SSL = "Use SSL for all S3 api operations";
     public static final String OPT_SSL = "-s";
     public static final String LONGOPT_SSL = "--ssl";
     @Option(name=OPT_SSL, aliases=LONGOPT_SSL, usage=USAGE_SSL)
+    @Builder.Default
     @Getter @Setter private boolean ssl = false;
 
     public static final String USAGE_ENCRYPT = "Enable AWS managed server-side encryption";
     public static final String OPT_ENCRYPT = "-E";
     public static final String LONGOPT_ENCRYPT = "--server-side-encryption";
     @Option(name=OPT_ENCRYPT, aliases=LONGOPT_ENCRYPT, usage=USAGE_ENCRYPT)
+    @Builder.Default
     @Getter @Setter private boolean encrypt = false;
 
     public static final String USAGE_STORAGE_CLASS = "The S3 StorageClass (default Standard)";
     public static final String OPT_STORAGE_CLASS = "-l";
     public static final String LONGOPT_STORAGE_CLASS = "--storage-class";
     @Option(name=OPT_STORAGE_CLASS, aliases=LONGOPT_STORAGE_CLASS, usage=USAGE_STORAGE_CLASS)
+    @Builder.Default
     @Getter @Setter private S3StorageClass storageClass = S3StorageClass.Standard;
 
     public static final String USAGE_PREFIX = "Only copy objects whose keys start with this prefix";
@@ -104,6 +119,7 @@ public class MirrorOptions implements AWSCredentials {
     public static final String OPT_ENDPOINT = "-e";
     public static final String LONGOPT_ENDPOINT = "--endpoint";
     @Option(name=OPT_ENDPOINT, aliases=LONGOPT_ENDPOINT, usage=USAGE_ENDPOINT)
+    @Builder.Default
     @Getter @Setter private String endpoint = System.getenv().get(AWS_ENDPOINT);
 
     public boolean hasEndpoint () { return endpoint != null && endpoint.trim().length() > 0; }
@@ -112,18 +128,21 @@ public class MirrorOptions implements AWSCredentials {
     public static final String OPT_MAX_CONNECTIONS = "-m";
     public static final String LONGOPT_MAX_CONNECTIONS = "--max-connections";
     @Option(name=OPT_MAX_CONNECTIONS, aliases=LONGOPT_MAX_CONNECTIONS, usage=USAGE_MAX_CONNECTIONS)
+    @Builder.Default
     @Getter @Setter private int maxConnections = 100;
 
     public static final String USAGE_MAX_THREADS = "Maximum number of threads (default 100)";
     public static final String OPT_MAX_THREADS = "-t";
     public static final String LONGOPT_MAX_THREADS = "--max-threads";
     @Option(name=OPT_MAX_THREADS, aliases=LONGOPT_MAX_THREADS, usage=USAGE_MAX_THREADS)
+    @Builder.Default
     @Getter @Setter private int maxThreads = 100;
 
     public static final String USAGE_MAX_RETRIES = "Maximum number of retries for S3 requests (default 5)";
     public static final String OPT_MAX_RETRIES = "-r";
     public static final String LONGOPT_MAX_RETRIES = "--max-retries";
     @Option(name=OPT_MAX_RETRIES, aliases=LONGOPT_MAX_RETRIES, usage=USAGE_MAX_RETRIES)
+    @Builder.Default
     @Getter @Setter private int maxRetries = 5;
 
     public static final String USAGE_CTIME = "Only copy objects whose Last-Modified date is younger than this many days. " +
@@ -157,6 +176,7 @@ public class MirrorOptions implements AWSCredentials {
         }
     }
     @Getter @Setter public String proxyHost = null;
+    @Builder.Default
     @Getter @Setter public int proxyPort = -1;
 
     public boolean getHasProxy() { return proxyHost != null && proxyHost.trim().length() > 0; }
@@ -193,6 +213,7 @@ public class MirrorOptions implements AWSCredentials {
     public static final String OPT_DELETE_REMOVED = "-X";
     public static final String LONGOPT_DELETE_REMOVED = "--delete-removed";
     @Option(name=OPT_DELETE_REMOVED, aliases=LONGOPT_DELETE_REMOVED, usage=USAGE_DELETE_REMOVED)
+    @Builder.Default
     @Getter @Setter private boolean deleteRemoved = false;
 
     @Argument(index=0, required=true, usage="source bucket[/source/prefix]") @Getter @Setter private String source;
@@ -212,6 +233,7 @@ public class MirrorOptions implements AWSCredentials {
     private static final String OPT_MULTI_PART_UPLOAD_SIZE = "-u";
     private static final String LONGOPT_MULTI_PART_UPLOAD_SIZE = "--upload-part-size";
     @Option(name=OPT_MULTI_PART_UPLOAD_SIZE, aliases=LONGOPT_MULTI_PART_UPLOAD_SIZE, usage=MULTI_PART_UPLOAD_SIZE_USAGE)
+    @Builder.Default
     @Getter @Setter private long uploadPartSize = DEFAULT_PART_SIZE;
 
     private static final String CROSS_ACCOUNT_USAGE ="Copy across AWS accounts. Only Resource-based policies are supported (as " +
@@ -221,6 +243,7 @@ public class MirrorOptions implements AWSCredentials {
     private static final String OPT_CROSS_ACCOUNT_COPY = "-C";
     private static final String LONGOPT_CROSS_ACCOUNT_COPY = "--cross-account-copy";
     @Option(name=OPT_CROSS_ACCOUNT_COPY, aliases=LONGOPT_CROSS_ACCOUNT_COPY, usage=CROSS_ACCOUNT_USAGE)
+    @Builder.Default
     @Getter @Setter private boolean crossAccountCopy = false;
 
     public void initDerivedFields() {
