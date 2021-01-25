@@ -3,6 +3,7 @@ package org.cobbzilla.s3s3mirror.store.s3.master;
 import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.s3s3mirror.MirrorContext;
 import org.cobbzilla.s3s3mirror.MirrorOptions;
+import org.cobbzilla.s3s3mirror.comparisonstrategies.ComparisonStrategy;
 import org.cobbzilla.s3s3mirror.store.FileStore;
 import org.cobbzilla.s3s3mirror.store.FileSummary;
 import org.cobbzilla.s3s3mirror.store.local.LocalFileStore;
@@ -15,9 +16,11 @@ import java.util.concurrent.ThreadPoolExecutor;
 
 @Slf4j
 public class LocalToS3CopyMaster extends S3Master {
+    private final ComparisonStrategy comparisonStrategy;
 
-    public LocalToS3CopyMaster(MirrorContext context, BlockingQueue<Runnable> workQueue, ThreadPoolExecutor executorService) {
+    public LocalToS3CopyMaster(MirrorContext context, BlockingQueue<Runnable> workQueue, ThreadPoolExecutor executorService, ComparisonStrategy comparisonStrategy) {
         super(context, workQueue, executorService);
+        this.comparisonStrategy = comparisonStrategy;
     }
 
     @Override public FileStore getListSource() { return LocalFileStore.instance; }
@@ -26,12 +29,12 @@ public class LocalToS3CopyMaster extends S3Master {
     protected S3KeyUploadJob getTask(FileSummary summary) {
         if (summary == null) return null;
         if (summary.isSymlink()) {
-            return new LocalS3KeyLinkJob(s3client, context, summary, notifyLock);
+            return new LocalS3KeyLinkJob(s3client, context, summary, notifyLock, comparisonStrategy);
         }
         if (summary.getSize() > MirrorOptions.MAX_SINGLE_REQUEST_UPLOAD_FILE_SIZE) {
-            return new S3MultipartUploadJob(s3client, context, summary, notifyLock);
+            return new S3MultipartUploadJob(s3client, context, summary, notifyLock, comparisonStrategy);
         }
-        return new S3KeyUploadJob(s3client, context, summary, notifyLock);
+        return new S3KeyUploadJob(s3client, context, summary, notifyLock, comparisonStrategy);
     }
 
 }

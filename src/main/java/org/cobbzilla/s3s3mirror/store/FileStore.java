@@ -7,5 +7,4 @@ public interface FileStore {
     public FileListing listObjects(ListRequest request, MirrorStats stats);
 
     public FileListing listNextBatch(FileListing listing, MirrorStats stats);
-
 }

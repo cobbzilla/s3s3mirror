@@ -8,7 +8,11 @@ Designed to be lightning-fast and highly concurrent, with modest CPU and memory 
 An object will be copied if and only if at least one of the following holds true:
 
 * The object does not exist in the destination bucket.
-* The size or ETag of the object in the destination bucket are different from the size/ETag in the source bucket.
+* The "sync strategy" triggers (by default uses the Etag sync strategy)
+    * Etag Strategy: If the size or Etags don't match between the source and destination bucket.
+    * Size Strategy: If the sizes don't match between the source and destination bucket.
+    * Size and Last Modified Strategy: If the source and destination objects have a different size, or the source bucket object has a more recent last modified date.
+    * SHA256 Strategy: Compares a file's SHA256 hash vs. a stored hash as custom metadata on the S3 objects. 
 
 When copying, the source metadata and ACLs are also copied to the destination object.
 
@@ -16,7 +20,7 @@ When copying, the source metadata and ACLs are also copied to the destination ob
 
 The latest s3s3mirror permits the source or destination to be a local filesystem path. Some caveats when copying to/from your local system: 
 
-* The ETag comparison is omitted since local files do not have ETags, and even if they did, they wouldn't match with what S3 generates.
+* The ETag comparison strategy is not supported since local files do not have ETags, and even if they did, they wouldn't match with what S3 generates.
 * When copying from S3 to your local system, metadata and ACLs are not copied (what would they mean anyway on your local system?)
 * When copying from your local system to S3, no metadata or ACLs are defined for the S3 object (they will be subject to whatever default IAM policies you have set for the bucket).
 
@@ -83,6 +87,10 @@ I encourage you to port them to the 2.x branch, if you have the ability.
     -p (--prefix) VAL         : Only copy objects whose keys start with this prefix
     -d (--dest-prefix) VAL    : Destination prefix (replacing the one specified in --prefix, if any)
     -R (--regex) VAL          : Only copy objects whose keys match this regular expression. Beware shell escaping mistakes.
+    -S (--sync-strategy)      : Choose the syncing strategy to be used to determine which objects should be copied.
+                                AUTO uses SIZE_SHA256 when the local file system is part of the copy and SIZE_ETAG when doing S3 to S3 copies. (default: AUTO)
+                                [SIZE | SIZE_ETAG | SIZE_SHA256 | 
+                                        SIZE_LAST_MODIFIED | AUTO]
     -e (--endpoint) VAL       : AWS endpoint to use (or set AWS_ENDPOINT in your environment)
     -X (--delete-removed)     : Delete objects from the destination bucket if they do not exist in the source bucket
     -t (--max-threads) N      : Maximum number of threads (default 100)
