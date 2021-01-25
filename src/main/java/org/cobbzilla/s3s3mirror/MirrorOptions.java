@@ -11,6 +11,7 @@ import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.cobbzilla.s3s3mirror.stats.StatusListener;
+import org.cobbzilla.s3s3mirror.comparisonstrategies.SyncStrategy;
 import org.joda.time.DateTime;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
@@ -101,6 +102,12 @@ public class MirrorOptions implements AWSCredentials {
     public static final String LONGOPT_REGEX = "--regex";
     @Option(name=OPT_REGEX, aliases=LONGOPT_REGEX, usage=USAGE_REGEX)
     @Getter @Setter private String regex = null;
+
+    public static final String USAGE_STRATEGY = "Choose the syncing strategy to be used to determine which objects should be copied.";
+    public static final String OPT_STRATEGY = "-S";
+    public static final String LONGOPT_STRATEGY = "--sync-strategy";
+    @Option(name=OPT_STRATEGY, aliases=LONGOPT_STRATEGY, usage=USAGE_STRATEGY)
+    @Getter @Setter private SyncStrategy syncStrategy = SyncStrategy.AUTO;
 
     public boolean hasRegex () { return regex != null && regex.length() > 0; }
     @Getter(lazy=true) private final Pattern regexPattern = initRegex();

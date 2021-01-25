@@ -10,6 +10,7 @@ import org.cobbzilla.s3s3mirror.KeyCopyJob;
 import org.cobbzilla.s3s3mirror.MirrorContext;
 import org.cobbzilla.s3s3mirror.MirrorOptions;
 import org.cobbzilla.s3s3mirror.stats.MirrorStats;
+import org.cobbzilla.s3s3mirror.comparisonstrategies.ComparisonStrategy;
 import org.cobbzilla.s3s3mirror.store.FileSummary;
 import org.cobbzilla.s3s3mirror.store.s3.S3FileListing;
 import org.slf4j.Logger;
@@ -19,8 +20,8 @@ public class S3KeyCopyJob extends KeyCopyJob {
 
     @Override public Logger getLog() { return log; }
 
-    public S3KeyCopyJob(AmazonS3Client client, MirrorContext context, FileSummary summary, Object notifyLock) {
-        super(client, context, summary, notifyLock);
+    public S3KeyCopyJob(AmazonS3Client client, MirrorContext context, FileSummary summary, Object notifyLock, ComparisonStrategy comparisonStrategy) {
+        super(client, context, summary, notifyLock, comparisonStrategy);
     }
 
     @Override public String toString() { return summary.getKey(); }

@@ -7,6 +7,7 @@ import org.apache.commons.io.input.NullInputStream;
 import org.cobbzilla.s3s3mirror.MirrorContext;
 import org.cobbzilla.s3s3mirror.MirrorOptions;
 import org.cobbzilla.s3s3mirror.stats.MirrorStats;
+import org.cobbzilla.s3s3mirror.comparisonstrategies.ComparisonStrategy;
 import org.cobbzilla.s3s3mirror.store.FileSummary;
 import org.cobbzilla.s3s3mirror.store.s3.job.S3KeyUploadJob;
 
@@ -16,8 +17,8 @@ public class LocalS3KeyLinkJob extends S3KeyUploadJob {
 
     private static final InputStream DEV_NULL = new NullInputStream(0);
 
-    public LocalS3KeyLinkJob(AmazonS3Client client, MirrorContext context, FileSummary summary, Object notifyLock) {
-        super(client, context, summary, notifyLock);
+    public LocalS3KeyLinkJob(AmazonS3Client client, MirrorContext context, FileSummary summary, Object notifyLock, ComparisonStrategy comparisonStrategy) {
+        super(client, context, summary, notifyLock, comparisonStrategy);
     }
 
     @Override protected boolean copyFile() throws Exception {

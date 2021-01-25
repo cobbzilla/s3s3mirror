@@ -2,6 +2,7 @@ package org.cobbzilla.s3s3mirror;
 
 import com.amazonaws.services.s3.AmazonS3Client;
 import org.cobbzilla.s3s3mirror.stats.MirrorStats;
+import org.cobbzilla.s3s3mirror.comparisonstrategies.strategies.NoImplementationComparisonStrategy;
 import org.cobbzilla.s3s3mirror.store.FileSummary;
 
 public abstract class KeyDeleteJob extends KeyCopyJob {
@@ -9,7 +10,7 @@ public abstract class KeyDeleteJob extends KeyCopyJob {
     private String keysrc;
 
     public KeyDeleteJob(AmazonS3Client client, MirrorContext context, FileSummary summary, Object notifyLock) {
-        super(client, context, summary, notifyLock);
+        super(client, context, summary, notifyLock, new NoImplementationComparisonStrategy());
 
         final MirrorOptions options = context.getOptions();
         keysrc = summary.getKey(); // NOTE: summary.getKey is the key in the destination bucket
