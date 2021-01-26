@@ -20,7 +20,7 @@ public class S3DeleteMaster extends S3Master {
     }
 
     @Override protected String getPrefix(MirrorOptions options) {
-        return options.hasDestPrefix() ? options.getDestPrefix() : options.getPrefix();
+        return options.hasDestPrefix() ? options.getDestPrefix() : "";
     }
 
     @Override protected String getBucket(MirrorOptions options) { return options.getDestinationBucket(); }

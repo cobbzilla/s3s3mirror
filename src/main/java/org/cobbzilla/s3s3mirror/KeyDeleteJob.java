@@ -14,9 +14,13 @@ public abstract class KeyDeleteJob extends KeyCopyJob {
 
         final MirrorOptions options = context.getOptions();
         keysrc = summary.getKey(); // NOTE: summary.getKey is the key in the destination bucket
-        if (options.hasPrefix()) {
+
+        if (options.hasDestPrefix()) {
             keysrc = keysrc.substring(options.getDestPrefixLength());
-            keysrc = options.getPrefix() + keyDestination;
+        }
+
+        if (options.hasPrefix()) {
+            keysrc = options.getPrefix() + keysrc;
         }
     }
 
